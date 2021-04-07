@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                autoDrawBackground="false">
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="disabled"/>
+        <s:State name="down"/>
+        <s:State name="over"/>
+        <s:State name="up"/>
+        <s:State name="selected"/>
+    </s:states>
+
+    <s:Button id="button"
+              skinClass="ui.skins.ButtonSkinIcon"
+              icon.normal="{Icons.RadioButtonEmpty}"
+              icon="{Icons.RadioButtonFilled}"
+              click="onClick(event)"/>
+
+    <fx:Script><![CDATA[
+        import events.PayloadEvent;
+
+        import global.Icons;
+
+        public static const SELECTED_CAROUSEL_BUTTON:String = "selectedCarouselButton";
+
+        private function onClick(event:MouseEvent):void
+        {
+            dispatchEvent(new PayloadEvent(SELECTED_CAROUSEL_BUTTON, data, true));
+        }
+        ]]></fx:Script>
+</s:ItemRenderer>

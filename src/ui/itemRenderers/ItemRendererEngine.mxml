@@ -1,0 +1,184 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:ui="ui.*"
+                creationComplete="onCreationComplete(event)"
+                width="100%"
+                minWidth="300"
+                autoDrawBackground="false">
+    <fx:Script><![CDATA[
+        import data.EngineData;
+        import data.PopupManager;
+
+        import global.Color;
+        import global.Icons;
+        import global.Util2;
+
+        import mx.events.FlexEvent;
+
+        import ui.popups.PopupConfirm;
+
+        private var engineData:EngineData;
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            engineData.addEventListener(EngineData.DOWNLOADING, onDownloading, false, 0, true);
+            engineData.addEventListener(EngineData.UNZIPPING, onUnzipping, false, 0, true);
+            engineData.addEventListener(EngineData.CONTENT_READY, onContentReady, false, 0, true);
+            engineData.addEventListener(EngineData.UNINSTALL, onUninstall, false, 0, true);
+            engineData.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
+        }
+
+        private function onDownloading(event:Event):void
+        {
+            labelSpeed.text = "";
+            progressBarDownload.reset();
+            validateMode();
+        }
+
+        private function onUnzipping(event:Event):void
+        {
+            validateMode();
+        }
+
+        private function onContentReady(event:Event):void
+        {
+            validateMode();
+        }
+
+        private function onUninstall(event:Event):void
+        {
+            validateMode();
+        }
+
+        private function onProgress(event:ProgressEvent):void
+        {
+            // Update progress bar
+            labelSpeed.text = Util2.readableByteCount(event.bytesLoaded) + " / " + Util2.readableByteCount(event.bytesTotal);
+            progressBarDownload.animateTo(event.bytesLoaded / event.bytesTotal);
+        }
+
+        override public function set data(value:Object):void
+        {
+            if (!value)
+                return;
+
+            engineData = EngineData(value);
+            labelVersion.text = engineData.version;
+            labelDate.text = Util2.toRelativeDate(engineData.date);
+
+            validateMode();
+        }
+
+        private function validateMode():void
+        {
+            if (engineData.installDirectory.exists)
+            {
+                // Downloaded
+                groupDownloadInProgress.visible = groupDownloadInProgress.includeInLayout = false;
+                groupDownloaded.visible = groupDownloaded.includeInLayout = true;
+                groupNotDownloaded.visible = groupNotDownloaded.includeInLayout = false;
+
+            } else
+            {
+                if (engineData.downloadingOrUnzipping)
+                {
+                    // Download is in progress
+                    groupDownloadInProgress.visible = groupDownloadInProgress.includeInLayout = true;
+                    groupDownloaded.visible = groupDownloaded.includeInLayout = false;
+                    groupNotDownloaded.visible = groupNotDownloaded.includeInLayout = false;
+                } else
+                {
+                    // Not downloaded
+                    groupDownloadInProgress.visible = groupDownloadInProgress.includeInLayout = false;
+                    groupDownloaded.visible = groupDownloaded.includeInLayout = false;
+                    groupNotDownloaded.visible = groupNotDownloaded.includeInLayout = true;
+                }
+            }
+        }
+
+        private function onClickDownload(event:MouseEvent):void
+        {
+            engineData.download();
+        }
+
+        private function onClickDelete(event:MouseEvent):void
+        {
+            var p:PopupConfirm = new PopupConfirm();
+            p.callbackConfirm = engineData.uninstall;
+            p.header = "Remove Version";
+            p.description = "Are you sure you want to remove Version " + engineData.version + "?";
+            p.textConfirm = "Remove";
+            PopupManager.open(p);
+        }
+        ]]>
+    </fx:Script>
+
+    <s:Group width="100%">
+
+        <s:Rect width="100%"
+                height="100%"
+                radiusX="5"
+                radiusY="5">
+            <s:fill>
+                <s:SolidColor color="{Color.fillLow}"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:HGroup width="100%"
+                  padding="15"
+                  verticalAlign="middle">
+
+            <s:VGroup width="100%"
+                      gap="10">
+
+                <s:Label id="labelVersion"
+                         styleName="header"/>
+
+                <s:Label id="labelDate"
+                         width="100%"/>
+
+            </s:VGroup>
+
+
+            <!--Download Progress-->
+            <s:VGroup id="groupDownloadInProgress"
+                      width="200">
+
+                <s:HGroup width="100%"
+                          horizontalAlign="right">
+                    <s:Label text="Downloading"/>
+                    <s:Label id="labelSpeed"
+                             color="{Color.themePrimary}"/>
+                </s:HGroup>
+
+                <ui:ProgressBar id="progressBarDownload"
+                                width="100%"/>
+
+            </s:VGroup>
+
+            <!--Downloaded-->
+            <s:HGroup id="groupDownloaded"
+                      width="100%"
+                      horizontalAlign="right">
+<!--                <s:Button id="buttonDelete"-->
+                <!--                          label="Remove"-->
+                <!--                          click="onClickDelete(event)"/>-->
+            </s:HGroup>
+
+            <!--Not Downloaded-->
+            <s:HGroup id="groupNotDownloaded"
+                      width="100%"
+                      horizontalAlign="right">
+                <s:Button id="buttonDownload"
+                          skinClass="ui.skins.ButtonThemeSkin"
+                          icon="{Icons.Download}"
+                          label="Download"
+                          click="onClickDownload(event)"/>
+            </s:HGroup>
+
+        </s:HGroup>
+
+    </s:Group>
+
+</s:ItemRenderer>

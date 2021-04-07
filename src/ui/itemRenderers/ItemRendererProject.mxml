@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                width="100%"
+                minWidth="300"
+                autoDrawBackground="false"
+                creationComplete="onCreationComplete(event)">
+    <fx:Script><![CDATA[
+        import data.EngineData;
+        import data.EngineManager;
+        import data.PopupManager;
+        import data.ProjectData;
+        import data.ProjectManager;
+
+        import global.Color;
+        import global.Icons;
+        import global.Util2;
+
+        import mx.events.FlexEvent;
+
+        import ui.popups.PopupConfirm;
+        import ui.popups.PopupModifyProject;
+        import ui.popups.PopupOpenWith;
+
+        private var projectData:ProjectData;
+
+        override public function set data(value:Object):void
+        {
+            if (!value)
+                return;
+
+            projectData = ProjectData(value);
+            labelName.text = projectData.name;
+            labelEngine.text = "Engine " + projectData.engine;
+
+            updateRelativeDateLabels();
+            validateEngine();
+        }
+
+        private function updateRelativeDateLabels():void
+        {
+            labelDateCreated.text = "Created " + Util2.toRelativeDate(projectData.dateCreated);
+            labelDateModified.text = "Modified " + Util2.toRelativeDate(projectData.dateModified);
+        }
+
+        private function deleteProject():void
+        {
+            var p:PopupConfirm = new PopupConfirm();
+            p.callbackConfirm = projectData.remove;
+            p.header = "Delete Project";
+            p.description = "Are you sure you want to delete " + projectData.name + "?";
+            p.textConfirm = "Delete";
+            PopupManager.open(p);
+        }
+
+        private function onClickOpen(event:MouseEvent):void
+        {
+            ProjectManager.instance.launch(projectData);
+        }
+
+        private function onClickOpenWith(event:MouseEvent):void
+        {
+            var p:PopupOpenWith = new PopupOpenWith();
+            p.projectData = projectData;
+            PopupManager.open(p);
+        }
+
+        private function onClickModify(event:MouseEvent):void
+        {
+            var p:PopupModifyProject = new PopupModifyProject();
+            p.projectData = projectData;
+            p.callbackConfirm = projectData.modify;
+            p.callbackDelete = deleteProject;
+            PopupManager.open(p);
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            Util2.timer.addEventListener(TimerEvent.TIMER, onTimer, false, 0, true);
+
+            var engineData:EngineData = EngineManager.instance.getEngineByVersion(projectData.engine);
+            engineData.addEventListener(EngineData.CONTENT_READY, onEngineAction, false, 0, true);
+            engineData.addEventListener(EngineData.UNINSTALL, onEngineAction, false, 0, true);
+        }
+
+        private function onEngineAction(event:Event):void
+        {
+            setTimeout(function ():void
+            {
+                validateEngine();
+            }, 500);
+        }
+
+        private function validateEngine():void
+        {
+            var engineData:EngineData = EngineManager.instance.getEngineByVersion(projectData.engine);
+            buttonOpenWith.enabled = EngineManager.instance.hasAnyEnginesInstalled();
+            buttonOpen.enabled = engineData.installDirectory.exists;
+        }
+
+        private function onTimer(event:TimerEvent):void
+        {
+            updateRelativeDateLabels();
+        }
+        ]]>
+    </fx:Script>
+
+    <s:Group width="100%">
+
+        <s:Rect width="100%"
+                height="100%"
+                radiusX="5"
+                radiusY="5">
+            <s:fill>
+                <s:SolidColor color="{Color.fillLow}"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:VGroup width="100%"
+                  padding="15"
+                  gap="15">
+
+            <s:VGroup width="100%"
+                      gap="10">
+
+                <s:Label id="labelName"
+                         maxWidth="240"
+                         maxDisplayedLines="1"
+                         showTruncationTip="true"
+                         styleName="header"/>
+
+                <s:HGroup width="100%">
+                    <s:VGroup width="100%">
+                        <s:Label id="labelDateModified"
+                                 width="100%"/>
+                        <s:Label id="labelDateCreated"
+                                 color="{Color.textLow}"
+                                 width="100%"/>
+                    </s:VGroup>
+
+                    <s:Label id="labelEngine"/>
+                </s:HGroup>
+
+            </s:VGroup>
+
+            <s:HGroup width="100%"
+                      horizontalAlign="right"
+                      top="5">
+
+                <s:Button id="buttonModify"
+                          label="Modify"
+                          click="onClickModify(event)"/>
+
+                <s:Button id="buttonOpenWith"
+                          label="Open with..."
+                          click="onClickOpenWith(event)"/>
+
+                <s:Button id="buttonOpen"
+                          skinClass="ui.skins.ButtonThemeSkin"
+                          label="Open"
+                          click="onClickOpen(event)"/>
+
+            </s:HGroup>
+
+        </s:VGroup>
+
+    </s:Group>
+
+</s:ItemRenderer>

@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                width="100%"
+                autoDrawBackground="false">
+    <fx:Script><![CDATA[
+        import data.EngineData;
+        import data.PopupManager;
+
+        import global.Color;
+        import global.Icons;
+        import global.Util2;
+
+        import mx.events.FlexEvent;
+
+        import ui.popups.PopupConfirm;
+
+        private var engineData:EngineData;
+
+        override public function set data(value:Object):void
+        {
+            if (!value)
+                return;
+
+            engineData = EngineData(value);
+            labelVersion.text = engineData.version;
+            labelDate.text = Util2.toRelativeDate(engineData.date);
+        }
+
+        private function onClickDownload(event:MouseEvent):void
+        {
+            engineData.download();
+        }
+
+        private function onClickDelete(event:MouseEvent):void
+        {
+            var p:PopupConfirm = new PopupConfirm();
+            p.callbackConfirm = engineData.uninstall;
+            p.header = "Remove Version";
+            p.description = "Are you sure you want to remove Version " + engineData.version + "?";
+            p.textConfirm = "Remove";
+            PopupManager.open(p);
+        }
+        ]]>
+    </fx:Script>
+
+    <s:Group width="100%">
+
+        <s:Rect width="100%"
+                height="100%"
+                radiusX="5"
+                radiusY="5">
+            <s:fill>
+                <s:SolidColor color="{Color.fillLow}"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:HGroup width="100%"
+                  padding="15"
+                  verticalAlign="middle">
+
+            <s:VGroup width="100%"
+                      gap="10">
+
+                <s:Label id="labelVersion"
+                         width="100%"
+                         styleName="header"/>
+                <s:Label id="labelDate"
+                         width="100%"/>
+
+            </s:VGroup>
+
+            <s:Button id="buttonDelete"
+                      skinClass="ui.skins.ButtonSkinIcon"
+                      icon="{Icons.Delete}"
+                      toolTip="Remove"
+                      click="onClickDelete(event)"/>
+
+        </s:HGroup>
+
+    </s:Group>
+
+</s:ItemRenderer>

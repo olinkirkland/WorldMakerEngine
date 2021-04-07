@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                width="100%"
+                autoDrawBackground="false">
+    <fx:Script><![CDATA[
+        import data.NewsSectionData;
+
+        private var section:NewsSectionData;
+
+        override public function set data(value:Object):void
+        {
+            if (!value)
+                return;
+
+            section = NewsSectionData(value);
+            labelText.text = section.text;
+        }
+        ]]>
+    </fx:Script>
+
+    <s:Label id="labelText"
+             width="100%"/>
+
+</s:ItemRenderer>

@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:components="ui.components.*"
+                creationComplete="onCreationComplete(event)"
+                autoDrawBackground="false"
+                width="100%">
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="disabled"/>
+        <s:State name="down"/>
+        <s:State name="over"/>
+        <s:State name="up"/>
+        <s:State name="selected"/>
+    </s:states>
+
+    <fx:Script><![CDATA[
+        import data.EngineData;
+
+        import global.Color;
+        import global.Icons;
+
+        import mx.events.FlexEvent;
+
+        private var engineData:EngineData;
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            engineData.addEventListener(EngineData.DOWNLOADING, onEngineAction, false, 0, true);
+            engineData.addEventListener(EngineData.UNZIPPING, onEngineAction, false, 0, true);
+            engineData.addEventListener(EngineData.CONTENT_READY, onEngineAction, false, 0, true);
+            engineData.addEventListener(EngineData.UNINSTALL, onEngineAction, false, 0, true);
+        }
+
+        private function onEngineAction(event:Event):void
+        {
+            validateMode();
+        }
+
+        override public function set data(value:Object):void
+        {
+            if (!value)
+                return;
+
+            engineData = EngineData(value);
+            labelVersion.text = engineData.version.substr(0, engineData.version.indexOf(" "));
+            if (labelVersion.text.length == 0)
+                labelVersion.text = engineData.version;
+            labelVersion.toolTip = engineData.version;
+
+            validateMode();
+        }
+
+        private function validateMode():void
+        {
+            if (engineData.installDirectory.exists)
+            {
+                // Downloaded
+                imageIcon.source = Icons.Installed;
+                imageGroup.toolTip = "Installed";
+            } else
+            {
+                if (engineData.downloadingOrUnzipping)
+                {
+                    // Download is in progress
+                    imageIcon.source = Icons.DownloadInProgress;
+                    imageGroup.toolTip = "Download in progress";
+                } else
+                {
+                    // Not downloaded
+                    imageIcon.source = Icons.NotInstalled;
+                    imageGroup.toolTip = "Not installed";
+                }
+            }
+        }
+        ]]>
+    </fx:Script>
+
+    <s:Group width="100%">
+
+        <s:Rect width="100%"
+                height="100%"
+                radiusX="5"
+                radiusY="5">
+            <s:fill>
+                <s:SolidColor color="{Color.fillMedium}"
+                              color.down="{Color.fillInset}"
+                              color.selected="{Color.fillInset}"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:Rect width="100%"
+                height="100%"
+                radiusX="5"
+                radiusY="5">
+            <s:fill>
+                <s:SolidColor color="{Color.white}"
+                              alpha="0"
+                              alpha.over=".2"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:HGroup width="100%"
+                  padding="10"
+                  verticalAlign="middle">
+
+            <s:Label id="labelVersion"
+                     color="{Color.textMedium}"
+                     color.down="{Color.textLow}"
+                     color.selected="{Color.textLow}"
+                     maxWidth="60"
+                     maxDisplayedLines="1"
+                     showTruncationTip="true"/>
+
+            <s:Spacer width="100%"/>
+
+            <s:Group id="imageGroup">
+                <components:ColorBitmapImage id="imageIcon"
+                                             color="{Color.textMedium}"
+                                             color.normal="{Color.textMedium}"
+                                             color.down="{Color.textLow}"
+                                             color.selected="{Color.textLow}"
+                                             width="16"
+                                             height="16"/>
+            </s:Group>
+
+        </s:HGroup>
+
+    </s:Group>
+
+</s:ItemRenderer>

@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<popups:Popup xmlns:fx="http://ns.adobe.com/mxml/2009"
+              xmlns:s="library://ns.adobe.com/flex/spark"
+              xmlns:popups="ui.popups.*"
+              width="480"
+              maxHeight="640">
+
+    <fx:Script><![CDATA[
+        import data.PopupManager;
+        import data.SettingsManager;
+        import data.SettingsManager;
+
+        import global.Icons;
+        import global.License;
+        import global.Settings;
+
+        import mx.collections.ArrayCollection;
+
+        import mx.events.FlexEvent;
+
+        import spark.events.IndexChangeEvent;
+
+        override public function onCreationComplete(event:FlexEvent):void
+        {
+            super.onCreationComplete(event);
+
+            validate();
+        }
+
+        private function validate():void
+        {
+            dropDownListInitialPage.dataProvider = new ArrayCollection([
+                {text: "Home", id: "home"},
+                {text: "Worlds", id: "projects"},
+                {text: "Engine", id: "engine"}]);
+            for each (var page:Object in dropDownListInitialPage.dataProvider)
+                if (page.id == SettingsManager.instance.getProperty("initialPage"))
+                    dropDownListInitialPage.selectedItem = page;
+
+            checkBoxFirstRunPopup.selected = SettingsManager.instance.getProperty("firstRunPopup");
+        }
+
+        private function onResetDefaults(event:MouseEvent):void
+        {
+            SettingsManager.instance.setDefaults();
+            validate();
+        }
+
+        private function onClose(event:MouseEvent):void
+        {
+            close();
+        }
+
+        private function onDropDownListInitialPage(event:IndexChangeEvent):void
+        {
+            SettingsManager.instance.setProperty("initialPage", dropDownListInitialPage.selectedItem.id);
+        }
+
+        private function onShowWelcomePage(event:Event):void
+        {
+            SettingsManager.instance.setProperty("firstRunPopup", checkBoxFirstRunPopup.selected);
+        }
+
+        private function onLicense(event:MouseEvent):void
+        {
+            var p:PopupInfo = new PopupInfo();
+            p.header = "Software License";
+            p.description = License.text;
+            PopupManager.open(p);
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup gap="15"
+              width="100%">
+
+        <s:HGroup width="100%"
+                  verticalAlign="top">
+            <s:Label id="labelHeader"
+                     text="Launcher Settings"
+                     width="100%"
+                     styleName="header"/>
+            <s:Button icon="{Icons.Multiply}"
+                      skinClass="ui.skins.ButtonSkinIcon"
+                      click="onClose(event)"/>
+        </s:HGroup>
+
+
+        <s:VGroup width="100%"
+                  height="100%"
+                  gap="15">
+
+            <s:Scroller width="100%"
+                        height="100%"
+                        horizontalScrollPolicy="off"
+                        verticalScrollPolicy="auto">
+                <s:VGroup width="100%"
+                          height="100%"
+                          gap="15">
+                    <s:Label text="Worldmaker Launcher v{Settings.version}"/>
+                    <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                             width="100%">
+                        <s:VGroup width="100%"
+                                  gap="10"
+                                  padding="15">
+                            <s:HGroup width="100%"
+                                      verticalAlign="middle">
+                                <s:Label text="Starting Page"/>
+                                <s:DropDownList id="dropDownListInitialPage"
+                                                width="100%"
+                                                requireSelection="true"
+                                                labelField="text"
+                                                change="onDropDownListInitialPage(event)"/>
+                            </s:HGroup>
+                            <s:CheckBox id="checkBoxFirstRunPopup"
+                                        width="100%"
+                                        label="Show welcome popup"
+                                        change="onShowWelcomePage(event)"/>
+                        </s:VGroup>
+                    </s:Panel>
+
+                    <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                             width="100%">
+                        <s:VGroup width="100%"
+                                  height="100%"
+                                  gap="15"
+                                  padding="15">
+                            <s:Button label="Reset to Defaults"
+                                      click="onResetDefaults(event)"/>
+                        </s:VGroup>
+                    </s:Panel>
+
+                    <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                             width="100%">
+                        <s:VGroup width="100%"
+                                  height="100%"
+                                  gap="15"
+                                  padding="15">
+                            <s:Button label="License"
+                                      click="onLicense(event)"/>
+                        </s:VGroup>
+                    </s:Panel>
+
+                </s:VGroup>
+            </s:Scroller>
+        </s:VGroup>
+
+    </s:VGroup>
+</popups:Popup>

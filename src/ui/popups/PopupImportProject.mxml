@@ -1,0 +1,331 @@
+<?xml version="1.0"?>
+<popups:Popup xmlns:fx="http://ns.adobe.com/mxml/2009"
+              xmlns:s="library://ns.adobe.com/flex/spark"
+              xmlns:popups="ui.popups.*"
+              xmlns:ui="ui.components.*"
+              width="320">
+
+    <fx:Script><![CDATA[
+        import data.ProjectData;
+        import data.ProjectManager;
+
+        import global.Color;
+        import global.Icons;
+        import global.Util2;
+
+        import mx.events.FlexEvent;
+
+        import spark.events.TextOperationEvent;
+
+        public var callbackConfirm:Function = null;
+
+        public var importedWorld:Object;
+        public var selectedFile:File;
+
+        override public function onCreationComplete(event:FlexEvent):void
+        {
+            super.onCreationComplete(event);
+
+            validate();
+        }
+
+        private function validate():void
+        {
+            groupImport.visible = groupImport.includeInLayout = !importedWorld;
+            groupDetails.visible = groupDetails.includeInLayout = importedWorld;
+
+            if (!importedWorld)
+                return;
+
+            labelOriginalName.text = "Imported from \"" + importedWorld.meta.name + "\"";
+            labelOriginalFile.text = selectedFile ? selectedFile.nativePath : "[Downloaded]";
+            labelDateCreated.text = "Created " + Util2.toRelativeDate(importedWorld.meta.dateCreated);
+            labelDateModified.text = "Modified " + Util2.toRelativeDate(importedWorld.meta.dateModified);
+            labelEngine.text = "Engine " + importedWorld.meta.engine;
+
+            validateGroupName();
+        }
+
+        private function validateGroupName():void
+        {
+            inputName.text = getNextName();
+            validateName();
+        }
+
+        private function getNextName():String
+        {
+            var baseName:String = importedWorld.meta.name;
+            var currentName:String = baseName;
+            var i:int = 1;
+            while (nameExists(currentName))
+            {
+                currentName = baseName + " (" + i++ + ")";
+            }
+
+            function nameExists(str:String):Boolean
+            {
+                for each (var p:ProjectData in ProjectManager.instance.projects)
+                    if (p.name == str)
+                        return true;
+                return false;
+            }
+
+            return currentName;
+        }
+
+        public function get selectedName():String
+        {
+            return inputName.text;
+        }
+
+        private function onClose(event:MouseEvent):void
+        {
+            close();
+        }
+
+        private function confirmAndClose(event:MouseEvent):void
+        {
+            var u:Object = importedWorld;
+
+            var projectData:ProjectData = new ProjectData();
+            projectData.name = u.meta.name;
+            projectData.file = File.applicationStorageDirectory.resolvePath("projects").resolvePath(projectData.name + ".json");
+            projectData.dateCreated = u.meta.dateCreated;
+            projectData.dateModified = u.meta.dateModified;
+            projectData.engine = u.meta.engine;
+            projectData.content = u.content;
+
+            ProjectManager.instance.addProject(projectData);
+
+            if (callbackConfirm != null) callbackConfirm.apply();
+            close();
+        }
+
+        private function validateName():void
+        {
+            var valid:Boolean = ProjectManager.instance.validateNewName(inputName.text);
+            groupImageNameValidation.includeInLayout = groupImageNameValidation.visible = !valid;
+            buttonConfirm.enabled = valid;
+
+            importedWorld.meta.name = inputName.text;
+        }
+
+        private function onChangeInputName(event:TextOperationEvent):void
+        {
+            validateName();
+        }
+
+        private function onDragEnter(event:NativeDragEvent):void
+        {
+            groupDragBackground.color = Color.fillMedium;
+
+            var files:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
+            var file:File = files[0];
+            if (!file.isDirectory && (file.type == ".json"))
+            {
+                imageDrag.source = Icons.ImportYes;
+                imageDrag.color = Color.themePrimary;
+
+                NativeDragManager.acceptDragDrop(groupDrag);
+            } else
+            {
+                imageDrag.source = Icons.ImportNo;
+                imageDrag.color = Color.textMedium;
+            }
+
+            labelDragAndDropInstructions.setStyle("color", imageDrag.color);
+        }
+
+        private function onDragExit(event:NativeDragEvent):void
+        {
+            imageDrag.color = Color.textMedium;
+
+            imageDrag.source = Icons.Import;
+            groupDragBackground.color = Color.fillLow;
+
+            labelDragAndDropInstructions.setStyle("color", imageDrag.color);
+        }
+
+        private function onDragDrop(event:NativeDragEvent):void
+        {
+            var files:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
+            var file:File = files[0];
+            selectFile(file);
+        }
+
+        private function selectFile(file:File):void
+        {
+            selectedFile = file;
+
+            imageDrag.color = Color.textMedium;
+            labelDragAndDropInstructions.setStyle("color", imageDrag.color);
+
+            imageDrag.source = Icons.ImportYes;
+
+            var fileStream:FileStream = new FileStream();
+            fileStream.open(file, FileMode.READ);
+            var json:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+            fileStream.close();
+
+            importedWorld = JSON.parse(json);
+
+            validate();
+        }
+
+        private function onBrowse(event:MouseEvent):void
+        {
+            var file:File = File.desktopDirectory;
+            file.addEventListener(Event.SELECT, onFileSelected);
+            file.addEventListener(Event.CANCEL, onFileCanceled);
+            var swfTypeFilter:FileFilter = new FileFilter("JSON Files", "*.json");
+            var allTypeFilter:FileFilter = new FileFilter("All Files (*.*)", "*.*");
+            file.browse([swfTypeFilter, allTypeFilter]);
+
+            function onFileSelected(event:Event):void
+            {
+                file.removeEventListener(Event.SELECT, onFileSelected);
+                file.removeEventListener(Event.CANCEL, onFileCanceled);
+                if (!file.isDirectory && (file.type == ".json"))
+                    selectFile(file);
+            }
+
+            function onFileCanceled(event:Event):void
+            {
+                file.removeEventListener(Event.SELECT, onFileSelected);
+                file.removeEventListener(Event.CANCEL, onFileCanceled);
+            }
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup gap="15"
+              width="100%">
+
+        <s:HGroup width="100%"
+                  verticalAlign="top">
+            <s:Label id="labelHeader"
+                     text="Import an existing World"
+                     width="100%"
+                     styleName="header"/>
+            <s:Button icon="{Icons.Multiply}"
+                      skinClass="ui.skins.ButtonSkinIcon"
+                      click="onClose(event)"/>
+        </s:HGroup>
+
+        <s:VGroup id="groupImport"
+                  width="100%"
+                  gap="15"
+                  horizontalAlign="center">
+
+            <s:Label width="100%"
+                     text="Import an existing World. The target file will be copied to the application storage directory."/>
+
+            <s:Panel width="100%"
+                     skinClass="ui.skins.PanelSkinOutline">
+                <s:Group width="100%"
+                         id="groupDrag"
+                         mouseChildren="false"
+                         nativeDragEnter="onDragEnter(event)"
+                         nativeDragExit="onDragExit(event)"
+                         nativeDragDrop="onDragDrop(event)">
+                    <s:Rect width="100%"
+                            height="100%">
+                        <s:fill>
+                            <s:SolidColor id="groupDragBackground"
+                                          color="{Color.fillLow}"/>
+                        </s:fill>
+                    </s:Rect>
+                    <s:VGroup width="100%"
+                              horizontalAlign="center"
+                              gap="15"
+                              padding="25">
+                        <ui:ColorBitmapImage id="imageDrag"
+                                             source="{Icons.Import}"
+                                             width="32"
+                                             height="32"
+                                             color="{Color.textMedium}"/>
+                        <s:Label id="labelDragAndDropInstructions"
+                                 width="100%"
+                                 textAlign="center"
+                                 text="Drag and drop a file here"/>
+                    </s:VGroup>
+                </s:Group>
+            </s:Panel>
+            <s:Label text="or"/>
+            <s:Button label="Browse for file"
+                      click="onBrowse(event)"/>
+        </s:VGroup>
+
+        <s:VGroup id="groupDetails"
+                  width="100%"
+                  gap="15">
+
+            <s:Panel id="groupName"
+                     skinClass="ui.skins.PanelSkinOutline"
+                     width="100%">
+
+                <s:VGroup width="100%"
+                          height="100%"
+                          gap="5">
+
+                    <s:Label text="You can choose to import this World with a different name"
+                             width="100%"/>
+                    <s:HGroup width="100%"
+                              gap="10"
+                              verticalAlign="middle">
+                        <ui:IconTextInput id="inputName"
+                                          icon="{Icons.Edit}"
+                                          width="100%"
+                                          change="onChangeInputName(event)"/>
+                        <s:Group id="groupImageNameValidation"
+                                 toolTip="World names must be at least 1 character long and unique">
+                            <ui:ColorBitmapImage id="imageNameValidation"
+                                                 width="16"
+                                                 height="16"
+                                                 source="{Icons.Error}"
+                                                 color="{Color.textHigh}"/>
+                        </s:Group>
+                    </s:HGroup>
+
+                </s:VGroup>
+
+            </s:Panel>
+
+            <s:Panel width="100%"
+                     skinClass="ui.skins.PanelSkinOutline">
+                <s:VGroup width="100%"
+                          gap="10">
+                    <s:Panel width="100%"
+                             skinClass="ui.skins.PanelSkinOutline">
+                        <s:VGroup width="100%"
+                                  gap="10">
+                            <s:Label id="labelOriginalName"
+                                     width="100%"/>
+                            <s:Label id="labelOriginalFile"
+                                     width="100%"/>
+                            <s:Label id="labelEngine"
+                                     width="100%"/>
+                        </s:VGroup>
+                    </s:Panel>
+                    <s:Label id="labelDateModified"
+                             width="100%"/>
+                    <s:Label id="labelDateCreated"
+                             color="{Color.textLow}"
+                             width="100%"/>
+                </s:VGroup>
+
+            </s:Panel>
+
+            <s:HGroup width="100%"
+                      horizontalAlign="right"
+                      top="5">
+                <s:Button id="buttonConfirm"
+                          label="Import"
+                          skinClass="ui.skins.ButtonThemeSkin"
+                          click="confirmAndClose(event)"/>
+            </s:HGroup>
+
+        </s:VGroup>
+
+    </s:VGroup>
+</popups:Popup>

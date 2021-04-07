@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:ui="ui.components.*"
+                width="100%"
+                autoDrawBackground="false">
+    <fx:Script><![CDATA[
+        import data.NewsSectionData;
+
+        import global.Color;
+        import global.Icons;
+
+        import mx.utils.UIDUtil;
+
+        private var section:NewsSectionData;
+
+        override public function set data(value:Object):void
+        {
+            if (!value)
+                return;
+
+            section = NewsSectionData(value);
+            image.source = section.url + "?" + UIDUtil.createUID();
+            image.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            labelCaption.text = section.text;
+        }
+
+        private function onProgress(event:ProgressEvent):void
+        {
+            labelProgress.text = int((event.bytesLoaded / event.bytesTotal) * 100) + "%";
+        }
+
+        private function onImageComplete(event:Event):void
+        {
+            image.removeEventListener(ProgressEvent.PROGRESS, onProgress);
+
+            image.height = image.sourceHeight * (image.width / image.sourceWidth);
+
+            image.includeInLayout = image.visible = true;
+            imageLoading.includeInLayout = imageLoading.visible = false;
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup padding="5"
+              paddingLeft="10"
+              paddingRight="10"
+              width="100%"
+              gap="10"
+              horizontalAlign="center"
+              verticalAlign="middle">
+
+        <s:HGroup id="imageLoading"
+                  width="100%"
+                  horizontalAlign="center"
+                  verticalAlign="middle">
+            <s:HGroup width="100%"
+                      padding="0"
+                      horizontalAlign="right">
+                <ui:ColorBitmapImage width="16"
+                                     height="16"
+                                     color="{Color.textLow}"
+                                     source="{Icons.Image}"
+                                     smooth="true"
+                                     smoothingQuality="high"/>
+            </s:HGroup>
+            <s:Label id="labelProgress"
+                     width="100%"
+                     text="0%"/>
+        </s:HGroup>
+
+        <s:Image id="image"
+                 width="100%"
+                 horizontalAlign="center"
+                 verticalAlign="top"
+                 fillMode="scale"
+                 scaleMode="letterbox"
+                 complete="onImageComplete(event)"/>
+
+        <s:Label id="labelCaption"
+                 textAlign="center"
+                 color="{Color.textLow}"
+                 width="100%"/>
+
+    </s:VGroup>
+
+</s:ItemRenderer>

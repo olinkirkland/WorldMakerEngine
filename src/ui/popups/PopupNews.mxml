@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<popups:Popup xmlns:fx="http://ns.adobe.com/mxml/2009"
+              xmlns:s="library://ns.adobe.com/flex/spark"
+              xmlns:popups="ui.popups.*"
+              width="640"
+              maxHeight="640">
+
+    <fx:Script><![CDATA[
+        import data.NewsData;
+        import data.NewsSectionData;
+        import data.NewsSectionType;
+
+        import global.Icons;
+        import global.Util2;
+        import global.Util2;
+
+        import mx.collections.ArrayCollection;
+        import mx.events.FlexEvent;
+
+        import ui.itemRenderers.news.sections.ItemRendererNewsSectionImage;
+        import ui.itemRenderers.news.sections.ItemRendererNewsSectionLink;
+        import ui.itemRenderers.news.sections.ItemRendererNewsSectionText;
+        import ui.itemRenderers.news.sections.ItemRendererNewsSectionVideo;
+        import ui.itemRenderers.news.sections.ItemRendererNewsSectionWorld;
+
+        public var newsData:NewsData;
+
+        private static var typeMap:Object = {};
+
+        override public function onCreationComplete(event:FlexEvent):void
+        {
+            super.onCreationComplete(event);
+
+            typeMap[NewsSectionType.TEXT] = ItemRendererNewsSectionText;
+            typeMap[NewsSectionType.IMAGE] = ItemRendererNewsSectionImage;
+            typeMap[NewsSectionType.VIDEO] = ItemRendererNewsSectionVideo;
+            typeMap[NewsSectionType.LINK] = ItemRendererNewsSectionLink;
+            typeMap[NewsSectionType.WORLD] = ItemRendererNewsSectionWorld;
+
+            list.dataProvider = new ArrayCollection(newsData.content);
+        }
+
+        private function getItemRenderer(u:Object):IFactory
+        {
+            var section:NewsSectionData = NewsSectionData(u);
+            var renderer:Class = typeMap[section.type];
+            if (!renderer)
+                renderer = ItemRendererNewsSectionText;
+            return new ClassFactory(renderer);
+        }
+
+        private function onClose(event:MouseEvent):void
+        {
+            close();
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup gap="15"
+              width="100%"
+              height="100%">
+
+        <s:HGroup width="100%"
+                  verticalAlign="top">
+            <s:Label id="labelHeader"
+                     text="{newsData.title}"
+                     width="100%"
+                     styleName="header"/>
+            <s:Button icon="{Icons.Multiply}"
+                      skinClass="ui.skins.ButtonSkinIcon"
+                      click="onClose(event)"/>
+        </s:HGroup>
+
+        <s:Label id="labelDate"
+                 text="{Util2.toRelativeDate(newsData.date)}"
+                 width="100%"/>
+
+        <s:Scroller width="100%"
+                    height="100%"
+                    horizontalScrollPolicy="off"
+                    verticalScrollPolicy="auto">
+
+            <s:VGroup width="100%">
+                <s:List id="list"
+                        useVirtualLayout="false"
+                        width="100%"
+                        contentBackgroundAlpha="0"
+                        borderVisible="false"
+                        itemRendererFunction="getItemRenderer">
+                    <s:layout>
+                        <s:VerticalLayout gap="25"/>
+                    </s:layout>
+                </s:List>
+            </s:VGroup>
+
+        </s:Scroller>
+
+    </s:VGroup>
+</popups:Popup>

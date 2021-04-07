@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          showStatusBar="false"
+          creationComplete="onCreationComplete(event)"
+          width="1280"
+          height="720"
+          resize="onResize(event)">
+    <fx:Script><![CDATA[
+        import data.ProjectData;
+
+        import mx.events.FlexEvent;
+        import mx.events.ResizeEvent;
+
+        private var projectData:ProjectData;
+        private var app;
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+        }
+
+        public function start(swfBytes:ByteArray, projectData:ProjectData):void
+        {
+            var context:LoaderContext = new LoaderContext(false, new ApplicationDomain());
+            context.allowLoadBytesCodeExecution = true;
+            context.allowCodeImport = true;
+
+            title = projectData.name + " (" + projectData.engine + ")";
+
+            swfLoader.loaderContext = context;
+            swfLoader.source = swfBytes;
+            swfLoader.load();
+
+            this.projectData = projectData;
+        }
+
+        private function onSwfLoaderComplete(event:Event):void
+        {
+            swfLoader.visible = swfLoader.includeInLayout = true;
+
+            swfLoader.content.addEventListener(FlexEvent.APPLICATION_COMPLETE, onSwfApplicationComplete);
+        }
+
+        private function onSwfApplicationComplete(event:Event):void
+        {
+            // Load projectData
+            app = event.target.application;
+            app.load(projectData.content);
+            app.callbackSave = onSave;
+
+            forceAppResize();
+        }
+
+        private function onSave(data:Object):void
+        {
+            projectData.content = data;
+            projectData.save();
+        }
+
+        private function onResize(event:ResizeEvent):void
+        {
+            if (!app)
+                return;
+
+            forceAppResize();
+        }
+
+        private function forceAppResize():void
+        {
+            app.width = width;
+            app.height = height;
+        }
+        ]]></fx:Script>
+
+    <s:Group width="100%"
+             height="100%">
+        <s:Rect width="100%"
+                height="100%">
+            <s:fill>
+                <s:SolidColor color="0x000000"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:SWFLoader id="swfLoader"
+                     visible="false"
+                     includeInLayout="false"
+                     autoLoad="false"
+                     width="100%"
+                     height="100%"
+                     scaleContent="false"
+                     maintainAspectRatio="false"
+                     complete="onSwfLoaderComplete(event)"
+                     trustContent="true"/>
+    </s:Group>
+</s:Window>

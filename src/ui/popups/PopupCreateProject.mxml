@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<popups:Popup xmlns:fx="http://ns.adobe.com/mxml/2009"
+              xmlns:s="library://ns.adobe.com/flex/spark"
+              xmlns:popups="ui.popups.*"
+              xmlns:ui="ui.components.*"
+              width="320">
+
+    <fx:Script><![CDATA[
+        import data.EngineData;
+        import data.EngineManager;
+        import data.ProjectData;
+        import data.ProjectManager;
+
+        import global.Color;
+        import global.Icons;
+
+        import mx.collections.ArrayCollection;
+        import mx.events.FlexEvent;
+
+        import spark.collections.Sort;
+        import spark.collections.SortField;
+        import spark.events.TextOperationEvent;
+
+        public var callbackConfirm:Function = null;
+        private var engines:ArrayCollection;
+        private var sortByDate:Sort;
+
+        override public function onCreationComplete(event:FlexEvent):void
+        {
+            super.onCreationComplete(event);
+
+            sortByDate = new Sort();
+            sortByDate.fields = [new SortField("date", true)];
+
+            engines = new ArrayCollection(EngineManager.instance.engines);
+            engines.sort = sortByDate;
+            engines.refresh();
+
+            listEngines.dataProvider = engines;
+
+            inputName.text = getNextName();
+            validateName();
+        }
+
+        private function getNextName():String
+        {
+            var baseName:String = "Untitled";
+            var currentName:String = baseName;
+            var i:int = 1;
+            while (nameExists(currentName))
+                currentName = baseName + " (" + i++ + ")";
+
+            function nameExists(str:String):Boolean
+            {
+                for each (var p:ProjectData in ProjectManager.instance.projects)
+                    if (p.name == str)
+                        return true;
+                return false;
+            }
+
+            return currentName;
+        }
+
+        public function get selectedEngine():EngineData
+        {
+            return listEngines.selectedItem;
+        }
+
+        public function get selectedName():String
+        {
+            return inputName.text;
+        }
+
+        private function cancelAndClose(event:MouseEvent):void
+        {
+            close();
+        }
+
+        private function confirmAndClose(event:MouseEvent):void
+        {
+            if (callbackConfirm != null) callbackConfirm.apply(this, [this]);
+            close();
+        }
+
+        private function onChangeEnginesFilter(event:Event):void
+        {
+            engines.filterFunction = checkBoxFilterByInstall.selected ? filterByInstall : null;
+            engines.sort = sortByDate;
+            engines.refresh();
+
+            buttonConfirm.enabled = engines.length;
+        }
+
+        private function filterByInstall(engineData:EngineData):Boolean
+        {
+            return engineData.installDirectory.exists;
+        }
+
+        private function validateName():void
+        {
+            var valid:Boolean = ProjectManager.instance.validateNewName(inputName.text);
+            groupImageNameValidation.includeInLayout = groupImageNameValidation.visible = !valid;
+            buttonConfirm.enabled = valid;
+        }
+
+        private function onChangeInputName(event:TextOperationEvent):void
+        {
+            validateName();
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup gap="15"
+              width="100%">
+
+        <s:Label text="Create a new World"
+                 width="100%"
+                 styleName="header"/>
+
+        <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                 width="100%">
+            <s:VGroup width="100%"
+                      height="100%"
+                      gap="5">
+
+                <s:Label text="Enter a name for this World"
+                         width="100%"/>
+                <s:HGroup width="100%"
+                          gap="10"
+                          verticalAlign="middle">
+                    <ui:IconTextInput id="inputName"
+                                      icon="{Icons.Edit}"
+                                      width="100%"
+                                      change="onChangeInputName(event)"/>
+                    <s:Group id="groupImageNameValidation"
+                             toolTip="World names must be at least 1 character long and unique">
+                        <ui:ColorBitmapImage id="imageNameValidation"
+                                             width="16"
+                                             height="16"
+                                             source="{Icons.Error}"
+                                             color="{Color.textHigh}"/>
+                    </s:Group>
+                </s:HGroup>
+
+            </s:VGroup>
+
+        </s:Panel>
+
+        <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                 width="100%">
+            <s:VGroup width="100%"
+                      height="100%"
+                      gap="10">
+
+                <s:Label text="Choose a default Engine"
+                         width="100%"/>
+
+                <s:CheckBox id="checkBoxFilterByInstall"
+                            label="Show only installed Engines"
+                            change="onChangeEnginesFilter(event)"/>
+
+                <s:List id="listEngines"
+                        useVirtualLayout="false"
+                        width="100%"
+                        height="100%"
+                        maxHeight="180"
+                        contentBackgroundAlpha="0"
+                        borderVisible="false"
+                        horizontalScrollPolicy="off"
+                        requireSelection="true"
+                        allowMultipleSelection="false"
+                        itemRenderer="ui.itemRenderers.ItemRendererEngineMini">
+                    <s:layout>
+                        <s:TileLayout columnAlign="justifyUsingWidth"
+                                      requestedColumnCount="3"
+                                      horizontalGap="5"
+                                      verticalGap="5"/>
+                    </s:layout>
+                </s:List>
+
+                <s:Label width="100%"
+                         text="Worlds can be opened with any Engine. The Engine specified here will be the default for this World."/>
+
+            </s:VGroup>
+        </s:Panel>
+
+        <s:HGroup width="100%"
+                  horizontalAlign="right"
+                  top="5">
+            <s:Button id="buttonCancel"
+                      label="Cancel"
+                      click="cancelAndClose(event)"/>
+            <s:Button id="buttonConfirm"
+                      label="Create"
+                      skinClass="ui.skins.ButtonThemeSkin"
+                      click="confirmAndClose(event)"/>
+        </s:HGroup>
+
+    </s:VGroup>
+</popups:Popup>

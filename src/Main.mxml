@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:c="ui.components.*"
+               xmlns:g="game.*"
+               creationComplete="onCreationComplete(event)"
+               width="100%"
+               height="100%">
+
+    <fx:Style source="/assets/css/global.css"/>
+
+    <fx:Script><![CDATA[
+        import events.PopupEvent;
+
+        import global.Color;
+        import global.Icons;
+        import global.Signal;
+
+        import managers.State;
+
+        import mx.events.FlexEvent;
+        import mx.managers.ToolTipManager;
+
+        import org.osmf.utils.OSMFSettings;
+
+        import spark.events.ElementExistenceEvent;
+
+        import ui.ToolTip;
+        import ui.popups.Popup;
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            // Workaround for stage video
+            OSMFSettings.enableStageVideo = false;
+
+            addEventListeners();
+
+            ToolTipManager.showDelay = 0;
+            ToolTipManager.toolTipClass = ToolTip;
+
+            validateStepLabel();
+        }
+
+        private function addEventListeners():void
+        {
+            Signal.instance.addEventListener(PopupEvent.OPEN, function (event:PopupEvent):void
+            {
+                openPopup(event.popup);
+            });
+
+            Signal.instance.addEventListener(PopupEvent.CLOSE, function (event:PopupEvent):void
+            {
+                closePopup();
+            });
+
+            State.dispatcher.addEventListener(State.STATE_CHANGED, onStateChange);
+        }
+
+        private function onStateChange(event:Event):void
+        {
+            buttonSave.label = "Save *";
+            validateStepLabel();
+        }
+
+        private function validateStepLabel():void
+        {
+            var step:int = State.read("step");
+            labelStep.text = "Step " + step;
+        }
+
+        private function openPopup(panel:Popup):void
+        {
+            // Close existing popups
+            while (groupPopups.numElements > 0)
+                Popup(groupPopups.getElementAt(0)).close();
+
+            groupPopups.addElement(panel);
+        }
+
+        private function closePopup():void
+        {
+            // Close all existing popups
+            // Expect only one popup at a time since popups are designed to be modal only
+            popupModalRectangle.visible = false;
+            while (groupPopups.numElements > 0)
+                Popup(groupPopups.getElementAt(0)).close();
+        }
+
+        private function onPopupAddedOrRemoved(event:ElementExistenceEvent):void
+        {
+            callLater(function ():void
+            {
+                popupModalRectangle.includeInLayout = popupModalRectangle.visible = groupPopups.numElements > 0;
+            });
+        }
+
+        public function set callbackSave(f:Function):void
+        {
+            State.callbackSave = f;
+        }
+
+        private function onClickSave(event:MouseEvent):void
+        {
+            buttonSave.label = "Save";
+            buttonSave.enabled = false;
+            State.save();
+
+            setTimeout(function ():void
+            {
+                buttonSave.enabled = true;
+            }, 1000);
+        }
+
+        public function load(u:Object):void
+        {
+            State.load(u);
+        }
+        ]]></fx:Script>
+    <s:Group width="100%"
+             height="100%">
+
+        <!--Background-->
+        <s:Rect width="100%"
+                height="100%">
+            <s:fill>
+                <s:SolidColor color="{Color.fillLow}"/>
+            </s:fill>
+        </s:Rect>
+
+        <!--Frame-->
+        <s:VGroup width="100%"
+                  height="100%">
+
+            <!--Navigation Bar (Top Bar)-->
+            <s:Group width="100%">
+
+                <s:RectangularDropShadow width="100%"
+                                         height="100%"
+                                         blurX="10"
+                                         blurY="10"
+                                         alpha="0.3"
+                                         distance="0"
+                                         angle="90"
+                                         color="{Color.black}"/>
+
+                <s:HGroup width="100%"
+                          verticalAlign="middle"
+                          padding="15">
+
+                    <s:HGroup height="100%"
+                              verticalAlign="middle"
+                              gap="10">
+
+                        <s:Label text="Worldmaker"
+                                 fontSize="24"
+                                 fontFamily="Logo"
+                                 color="{Color.white}"/>
+                        <s:Group>
+                            <s:Rect width="100%"
+                                    height="100%"
+                                    radiusX="3"
+                                    radiusY="3">
+                                <s:fill>
+                                    <s:SolidColor color="{Color.white}"/>
+                                </s:fill>
+                            </s:Rect>
+                            <s:HGroup padding="3"
+                                      toolTip="Version 'Garnet'">
+                                <c:ColorBitmapImage source="{Icons.Logo}"
+                                                    color="{Color.garnet}"/>
+                            </s:HGroup>
+                        </s:Group>
+
+                    </s:HGroup>
+
+                    <s:Spacer width="100%"/>
+
+                    <s:Label id="labelStep"/>
+                    <s:Button id="buttonSave"
+                              label="Save"
+                              icon="{Icons.Save}"
+                              click="onClickSave(event)"/>
+                </s:HGroup>
+            </s:Group>
+
+            <g:Game id="game"
+                    width="100%"
+                    height="100%"/>
+
+        </s:VGroup>
+
+        <!--Modal mode rectangle for popups-->
+        <s:VGroup id="popupModalRectangle"
+                  width="100%"
+                  height="100%"
+                  visible="false"
+                  includeInLayout="false">
+            <s:Rect width="100%"
+                    height="100%">
+                <s:fill>
+                    <s:SolidColor color="{Color.black}"
+                                  alpha=".4"/>
+                </s:fill>
+            </s:Rect>
+        </s:VGroup>
+
+        <!--Popup layer-->
+        <s:VGroup id="groupPopups"
+                  elementAdd="onPopupAddedOrRemoved(event)"
+                  elementRemove="onPopupAddedOrRemoved(event)"
+                  width="100%"
+                  height="100%"
+                  padding="50"
+                  horizontalAlign="center"
+                  verticalAlign="middle"/>
+    </s:Group>
+</s:Application>

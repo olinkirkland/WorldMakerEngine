@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<popups:Popup xmlns:fx="http://ns.adobe.com/mxml/2009"
+              xmlns:s="library://ns.adobe.com/flex/spark"
+              xmlns:popups="ui.popups.*"
+              width="320">
+
+    <fx:Script><![CDATA[
+        import data.EngineData;
+        import data.EngineManager;
+        import data.ProjectData;
+
+        import global.Color;
+
+        import mx.collections.ArrayCollection;
+        import mx.events.FlexEvent;
+
+        import spark.collections.Sort;
+        import spark.collections.SortField;
+
+        public var callbackConfirm:Function = null;
+        public var callbackDelete:Function = null;
+        public var projectData:ProjectData;
+        private var engines:ArrayCollection;
+        private var sortByDate:Sort;
+
+        override public function onCreationComplete(event:FlexEvent):void
+        {
+            super.onCreationComplete(event);
+
+            sortByDate = new Sort();
+            sortByDate.fields = [new SortField("date", true)];
+
+            engines = new ArrayCollection(EngineManager.instance.engines);
+            engines.sort = sortByDate;
+            engines.filterFunction = filterByInstall;
+            engines.refresh();
+
+            buttonOpen.enabled = engines.length > 0;
+
+            listEngines.dataProvider = engines;
+        }
+
+        public function get selectedEngine():EngineData
+        {
+            return listEngines.selectedItem;
+        }
+
+        private function cancelAndClose(event:MouseEvent):void
+        {
+            close();
+        }
+
+        private function filterByInstall(engineData:EngineData):Boolean
+        {
+            return engineData.installDirectory.exists;
+        }
+
+        private function confirm(event:MouseEvent):void
+        {
+            close();
+
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup gap="15"
+              width="100%">
+
+        <s:Label text="Open with..."
+                 width="100%"
+                 styleName="header"/>
+
+        <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                 width="100%">
+            <s:VGroup width="100%"
+                      height="100%"
+                      gap="10">
+
+                <s:HGroup width="100%"
+                          gap="0"
+                          padding="0">
+                    <s:Label text="Open"/>
+                    <s:Label text="\u00a0{projectData.name}"
+                             color="{Color.textHigh}"/>
+                    <s:Label text="\u00a0with..."/>
+                </s:HGroup>
+
+                <s:List id="listEngines"
+                        useVirtualLayout="false"
+                        width="100%"
+                        height="100%"
+                        maxHeight="120"
+                        contentBackgroundAlpha="0"
+                        borderVisible="false"
+                        horizontalScrollPolicy="off"
+                        requireSelection="true"
+                        allowMultipleSelection="false"
+                        itemRenderer="ui.itemRenderers.ItemRendererEngineMini">
+                    <s:layout>
+                        <s:TileLayout columnAlign="justifyUsingWidth"
+                                      requestedColumnCount="3"
+                                      horizontalGap="5"
+                                      verticalGap="5"/>
+                    </s:layout>
+                </s:List>
+
+                <s:Label width="100%"
+                         text="This Project may not be compatible with every version of the Engine. Opening this Project will not affect its default Engine version."/>
+
+            </s:VGroup>
+        </s:Panel>
+
+        <s:HGroup width="100%"
+                  horizontalAlign="right"
+                  top="5">
+            <s:Button id="buttonCancel"
+                      label="Cancel"
+                      click="cancelAndClose(event)"/>
+            <s:Button id="buttonOpen"
+                      label="Open"
+                      skinClass="ui.skins.ButtonThemeSkin"
+                      click="confirm(event)"/>
+        </s:HGroup>
+
+    </s:VGroup>
+</popups:Popup>

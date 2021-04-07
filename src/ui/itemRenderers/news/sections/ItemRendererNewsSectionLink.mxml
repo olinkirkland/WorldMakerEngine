@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                width="100%"
+                autoDrawBackground="false">
+    <fx:Script><![CDATA[
+        import data.NewsSectionData;
+
+        import global.Color;
+        import global.Icons;
+
+        private var section:NewsSectionData;
+
+        override public function set data(value:Object):void
+        {
+            if (!value)
+                return;
+
+            section = NewsSectionData(value);
+            button.label = section.text;
+        }
+
+        private function onOpen(event:MouseEvent):void
+        {
+            navigateToURL(new URLRequest(section.url), "_blank");
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup width="100%"
+              padding="5"
+              paddingLeft="10"
+              paddingRight="10">
+
+        <s:Panel width="100%"
+                 skinClass="ui.skins.PanelSkinInset">
+            <s:HGroup padding="10"
+                      width="100%"
+                      verticalAlign="middle">
+
+                <s:Label text="This link will open in your browser"
+                         color="{Color.textLow}"
+                         width="100%"/>
+
+                <s:Button id="button"
+                          icon="{Icons.Link}"
+                          click="{onOpen(event)}"/>
+
+            </s:HGroup>
+        </s:Panel>
+
+    </s:VGroup>
+
+</s:ItemRenderer>
