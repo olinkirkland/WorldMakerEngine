@@ -34,8 +34,6 @@ package managers
 
         public static function save():void
         {
-            trace("Saved");
-
             if (callbackSave)
                 callbackSave.apply(null, [currentState]);
         }
