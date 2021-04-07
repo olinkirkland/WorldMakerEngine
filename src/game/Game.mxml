@@ -18,6 +18,7 @@
         import ui.popups.PopupConfirm;
 
         private var tasks:Array = [Task.Read_Introduction, Task.Make_Voronoi_Points, Task.Make_Tectonic_Plates];
+        private var task:String;
 
         private function onCreationComplete(event:FlexEvent):void
         {
@@ -38,11 +39,15 @@
         private function validateTask():void
         {
             if (State.read("task") == undefined)
-                State.write("task", 0);
+                State.write("task", tasks[0]);
 
-            var task:int = State.read("task");
-            labelTaskNumber.text = (task + 1) + "/" + tasks.length;
-            labelTaskName.text = tasks[task];
+            task = State.read("task");
+
+            if (tasks.indexOf(task) < 0)
+                throw new Error("Task '" + task + "' not found");
+
+            labelTaskNumber.text = (tasks.indexOf(task) + 1) + "/" + tasks.length;
+            labelTaskName.text = task;
         }
 
         private function onNextTask(event:MouseEvent):void
@@ -60,8 +65,8 @@
         private function onNextTaskConfirm():void
         {
             // Go to the next task
-            var task:int = State.read("task");
-            State.write("task", ++task);
+            var newTaskIndex:int = tasks.indexOf(task) + 1;
+            State.write("task", tasks[newTaskIndex]);
         }
 
         private function onAllTasks(event:MouseEvent):void

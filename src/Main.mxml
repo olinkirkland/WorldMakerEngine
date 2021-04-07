@@ -147,6 +147,11 @@
                                  fontFamily="Logo"
                                  color="{Color.textLow}"/>
 
+                        <c:ColorBitmapImage source="{Icons.Logo}"
+                                            color="{Color.textLow}"
+                                            width="16"
+                                            height="16"/>
+
                     </s:HGroup>
 
                     <s:Spacer width="100%"/>
