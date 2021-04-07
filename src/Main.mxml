@@ -37,8 +37,6 @@
 
             ToolTipManager.showDelay = 0;
             ToolTipManager.toolTipClass = ToolTip;
-
-            validateStepLabel();
         }
 
         private function addEventListeners():void
@@ -59,13 +57,6 @@
         private function onStateChange(event:Event):void
         {
             buttonSave.label = "Save *";
-            validateStepLabel();
-        }
-
-        private function validateStepLabel():void
-        {
-            var step:int = State.read("step");
-            labelStep.text = "Step " + step;
         }
 
         private function openPopup(panel:Popup):void
@@ -154,28 +145,13 @@
                         <s:Label text="Worldmaker"
                                  fontSize="24"
                                  fontFamily="Logo"
-                                 color="{Color.white}"/>
-                        <s:Group>
-                            <s:Rect width="100%"
-                                    height="100%"
-                                    radiusX="3"
-                                    radiusY="3">
-                                <s:fill>
-                                    <s:SolidColor color="{Color.white}"/>
-                                </s:fill>
-                            </s:Rect>
-                            <s:HGroup padding="3"
-                                      toolTip="Version 'Garnet'">
-                                <c:ColorBitmapImage source="{Icons.Logo}"
-                                                    color="{Color.garnet}"/>
-                            </s:HGroup>
-                        </s:Group>
+                                 color="{Color.textLow}"/>
 
                     </s:HGroup>
 
                     <s:Spacer width="100%"/>
 
-                    <s:Label id="labelStep"/>
+                    <s:Label id="labelTask"/>
                     <s:Button id="buttonSave"
                               label="Save"
                               icon="{Icons.Save}"

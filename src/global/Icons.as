@@ -44,6 +44,9 @@ package global
         [Embed(source="/assets/icons/plant.png")]
         public static const Plant:Class;
 
+        [Embed(source="/assets/icons/tasks.png")]
+        public static const Tasks:Class;
+
         [Embed(source="/assets/icons/box.png")]
         public static const Box:Class;
 

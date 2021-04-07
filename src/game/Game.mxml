@@ -5,68 +5,127 @@
 
     <fx:Script>
         <![CDATA[
+        import global.Color;
+        import global.Icons;
+
         import managers.PopupManager;
         import managers.State;
 
         import mx.events.FlexEvent;
 
-        import spark.events.TextOperationEvent;
+        import ui.popups.Popup;
 
-        import ui.popups.PopupInfo;
+        import ui.popups.PopupConfirm;
+
+        private var tasks:Array = [Task.Read_Introduction, Task.Make_Voronoi_Points, Task.Make_Tectonic_Plates];
 
         private function onCreationComplete(event:FlexEvent):void
         {
-            State.dispatcher.addEventListener("stateChanged", function (event:Event):void
+            State.dispatcher.addEventListener(State.STATE_CHANGED, function (event:Event):void
             {
                 validate();
             });
 
             if (!State.loaded)
                 State.loadLocal();
-
-            setTimeout(validateStep, 500);
-        }
-
-        private function validateStep():void
-        {
-            // Checks what step the generation process is on and acts accordingly
-
-            var step:int = State.read("step");
-            if (step == 0)
-            {
-                // No steps yet taken, start sequence from the beginning
-                var p:PopupInfo = new PopupInfo();
-                p.header = "Before you begin";
-                p.description = "Before you begin text";
-                p.callback = function ():void
-                {
-                    State.write("step", 1);
-                };
-
-                PopupManager.open(p);
-            } else
-            {
-                trace("!");
-            }
-        }
-
-        private function onChangeFoo(event:TextOperationEvent):void
-        {
-            //State.write("test.foo", inputFoo.text);
-
         }
 
         private function validate():void
         {
-            //inputFoo.text = State.read("test.foo");
+            validateTask();
+        }
+
+        private function validateTask():void
+        {
+            if (State.read("task") == undefined)
+                State.write("task", 0);
+
+            var task:int = State.read("task");
+            labelTaskNumber.text = (task + 1) + "/" + tasks.length;
+            labelTaskName.text = tasks[task];
+        }
+
+        private function onNextTask(event:MouseEvent):void
+        {
+            var p:PopupConfirm = new PopupConfirm();
+            p.header = "Complete this task";
+            p.description = "Completing this task will lock in your choices permanently and progress to the next task.";
+            p.textConfirm = "Yes, I'm sure";
+            p.textCancel = "Cancel";
+            p.callbackConfirm = onNextTaskConfirm;
+
+            PopupManager.open(p);
+        }
+
+        private function onNextTaskConfirm():void
+        {
+            // Go to the next task
+            var task:int = State.read("task");
+            State.write("task", ++task);
+        }
+
+        private function onAllTasks(event:MouseEvent):void
+        {
+            // todo open all tasks popup
+            var p:Popup = new Popup();
+            PopupManager.open(p);
         }
         ]]>
     </fx:Script>
-    <s:VGroup width="100%"
-              height="100%">
-        <s:HGroup width="100%"
-                  height="100%">
 
-        </s:HGroup>
-    </s:VGroup>
+    <s:HGroup width="100%"
+              height="100%"
+              padding="15"
+              gap="15">
+
+        <s:Group width="100%"
+                 height="100%">
+
+            <!--Canvas-->
+
+
+            <s:HGroup verticalAlign="middle">
+                <!--Task Actions-->
+                <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                         maxWidth="200">
+                    <s:VGroup width="100%">
+                        <s:HGroup width="100%">
+                            <s:Label id="labelTaskNumber"
+                                     color="{Color.themePrimary}"/>
+                            <s:Label id="labelTaskName"
+                                     showTruncationTip="true"
+                                     width="100%"/>
+                        </s:HGroup>
+
+                    </s:VGroup>
+                </s:Panel>
+
+                <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                          icon="{Icons.Tasks}"
+                          toolTip="All tasks"
+                          click="onAllTasks(event)"/>
+            </s:HGroup>
+
+        </s:Group>
+
+        <!--Task Actions & Next Button-->
+        <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                 width="320"
+                 height="100%">
+            <s:VGroup width="100%"
+                      height="100%">
+
+                <s:VGroup width="100%"
+                          height="100%">
+
+                </s:VGroup>
+
+                <s:Button id="buttonNextTask"
+                          label="Next Task"
+                          click="onNextTask(event)"/>
+            </s:VGroup>
+        </s:Panel>
+
+    </s:HGroup>
+
 </s:Group>

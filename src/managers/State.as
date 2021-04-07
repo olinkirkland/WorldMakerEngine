@@ -52,7 +52,7 @@ package managers
             currentState = u;
             loaded = true;
 
-            dispatcher.dispatchEvent(new Event("stateChanged"));
+            dispatcher.dispatchEvent(new Event(State.STATE_CHANGED));
         }
 
         public static function loadLocal():void
@@ -73,7 +73,7 @@ package managers
 
             currentState = JSON.parse(json);
 
-            dispatcher.dispatchEvent(new Event("stateChanged"));
+            dispatcher.dispatchEvent(new Event(State.STATE_CHANGED));
         }
     }
 }
