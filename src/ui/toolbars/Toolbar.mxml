@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         skinClass="ui.skins.PanelSkinPopup"
+         creationComplete="onCreationComplete(event)"
+         title="Popup">
+
+    <fx:Script><![CDATA[
+        import game.task.Task;
+
+        import managers.PopupManager;
+
+        import managers.State;
+
+        import mx.events.FlexEvent;
+
+        import ui.popups.PopupConfirm;
+
+        public function onCreationComplete(event:FlexEvent):void
+        {
+
+        }
+
+        private function onNextTask(event:MouseEvent):void
+        {
+            var p:PopupConfirm = new PopupConfirm();
+            p.header = "Complete this task";
+            p.description = "Completing this task will lock in your choices permanently and progress to the next task.";
+            p.textConfirm = "Yes, I'm sure";
+            p.textCancel = "Cancel";
+            p.callbackConfirm = onNextTaskConfirm;
+
+            PopupManager.open(p);
+        }
+
+        private function onNextTaskConfirm():void
+        {
+            // Go to the next task
+            var newTaskIndex:int = Task.byId(State.read("task")).index + 1;
+            State.write("task", Task.byIndex(newTaskIndex).id);
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup width="100%"
+              height="100%">
+        <s:Spacer height="100%"/>
+        <s:HGroup width="100%"
+                  horizontalAlign="center">
+            <s:Button id="buttonNextTask"
+                      label="Next Task"
+                      click="onNextTask(event)"/>
+        </s:HGroup>
+    </s:VGroup>
+
+</s:Panel>

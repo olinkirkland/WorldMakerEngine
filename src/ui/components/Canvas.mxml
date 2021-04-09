@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark">
+
+    <fx:Script><![CDATA[
+        import mx.events.ResizeEvent;
+
+        private function onLayerGroupContainerResize(event:ResizeEvent):void
+        {
+            var t:Object = event.target;
+            t.height = (t.width / t.contentWidth) * t.contentHeight;
+        }
+        ]]></fx:Script>
+
+    <s:VGroup id="layerGroupContainer"
+              padding="15"
+              width="100%"
+              height="100%"
+              resizeMode="scale"
+              resize="onLayerGroupContainerResize(event)">
+        <s:Group id="layerGroup"
+                 width="1200"
+                 height="600"/>
+    </s:VGroup>
+
+    <s:Rect width="100%"
+            height="100%">
+        <s:fill>
+            <s:SolidColor color="0xff0000"
+                          alpha=".2"/>
+        </s:fill>
+    </s:Rect>
+
+</s:Group>

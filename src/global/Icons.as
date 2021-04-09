@@ -38,6 +38,12 @@ package global
         [Embed(source="/assets/icons/down.png")]
         public static const Down:Class;
 
+        [Embed(source="/assets/icons/up.png")]
+        public static const Up:Class;
+
+        [Embed(source="/assets/icons/layers.png")]
+        public static const Layers:Class;
+
         [Embed(source="/assets/icons/image.png")]
         public static const Image:Class;
 
@@ -119,13 +125,37 @@ package global
         [Embed(source="/assets/icons/search.png")]
         public static const Search:Class;
 
+        [Embed(source="/assets/icons/clear.png")]
+        public static const Clear:Class;
+
         [Embed(source="/assets/icons/multiply.png")]
         public static const Multiply:Class;
+
+        [Embed(source="/assets/icons/plus.png")]
+        public static const Plus:Class;
+
+        [Embed(source="/assets/icons/minus.png")]
+        public static const Minus:Class;
 
         [Embed(source="/assets/icons/sort.png")]
         public static const Sort:Class;
 
+        [Embed(source="/assets/icons/hide.png")]
+        public static const Hide:Class;
+
+        [Embed(source="/assets/icons/show.png")]
+        public static const Show:Class;
+
+        [Embed(source="/assets/icons/lock.png")]
+        public static const Lock:Class;
+
         [Embed(source="/assets/icons/replay.png")]
         public static const Replay:Class;
+
+        [Embed(source="/assets/icons/openPane.png")]
+        public static const OpenPane:Class;
+
+        [Embed(source="/assets/icons/closePane.png")]
+        public static const ClosePane:Class;
     }
 }

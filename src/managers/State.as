@@ -17,13 +17,14 @@ package managers
         public static var dispatcher:EventDispatcher = new EventDispatcher();
         public static var loaded:Boolean = false;
 
-        public static function write(id:String, data:*):void
+        public static function write(id:String, data:*):*
         {
             // Sets a property in the current state
             trace(id + " was changed from " + currentState[id] + " to '" + data + "'");
             currentState[id] = data;
 
             dispatcher.dispatchEvent(new Event(STATE_CHANGED));
+            return data;
         }
 
         public static function read(id:String):*

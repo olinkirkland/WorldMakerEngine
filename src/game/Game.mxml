@@ -1,136 +1,175 @@
 <?xml version="1.0"?>
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:c="ui.components.*"
+         xmlns:toolbar="ui.toolbars.*"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:p="ui.panes.*"
          creationComplete="onCreationComplete(event)">
 
     <fx:Script>
         <![CDATA[
+        import game.task.Task;
+        import game.task.TaskId;
+
         import global.Color;
         import global.Icons;
 
-        import managers.PopupManager;
         import managers.State;
 
         import mx.events.FlexEvent;
 
         import ui.popups.Popup;
 
-        import ui.popups.PopupConfirm;
-
-        private var tasks:Array = [Task.Read_Introduction, Task.Make_Voronoi_Points, Task.Make_Tectonic_Plates];
-        private var task:String;
+        private var map:Map;
 
         private function onCreationComplete(event:FlexEvent):void
+        {
+            if (!State.loaded)
+                State.loadLocal();
+
+            map = new Map();
+            paneLayers.listLayers.dataProvider = map.layers;
+
+            addEventListeners();
+
+            validate();
+        }
+
+        private function addEventListeners():void
         {
             State.dispatcher.addEventListener(State.STATE_CHANGED, function (event:Event):void
             {
                 validate();
             });
 
-            if (!State.loaded)
-                State.loadLocal();
+            viewStackPanes.addEventListener(Event.CLOSE, onPaneClose);
+        }
+
+        private function onPaneClose(event:Event):void
+        {
+            viewStackPanes.visible = viewStackPanes.includeInLayout = false;
+        }
+
+        private function onToggleLayers(event:MouseEvent):void
+        {
+            // If it's already open, close it
+            if (viewStackPanes.selectedChild == viewLayers && viewStackPanes.visible)
+            {
+                onPaneClose(null);
+                return;
+            }
+
+            // Otherwise, show the layers view
+            viewStackPanes.visible = viewStackPanes.includeInLayout = true;
+            viewStackPanes.selectedChild = viewLayers;
         }
 
         private function validate():void
         {
             validateTask();
+            paneLayers.validate();
         }
 
         private function validateTask():void
         {
             if (State.read("task") == undefined)
-                State.write("task", tasks[0]);
+                State.write("task", TaskId.READ_INTRODUCTION);
 
-            task = State.read("task");
+            var taskId:String = State.read("task");
 
-            if (tasks.indexOf(task) < 0)
-                throw new Error("Task '" + task + "' not found");
+            labelTaskNumber.text = (Task.byId(taskId).index + 1) + "/" + Task.tasks.length;
+            labelTaskName.text = taskId;
 
-            labelTaskNumber.text = (tasks.indexOf(task) + 1) + "/" + tasks.length;
-            labelTaskName.text = task;
-        }
-
-        private function onNextTask(event:MouseEvent):void
-        {
-            var p:PopupConfirm = new PopupConfirm();
-            p.header = "Complete this task";
-            p.description = "Completing this task will lock in your choices permanently and progress to the next task.";
-            p.textConfirm = "Yes, I'm sure";
-            p.textCancel = "Cancel";
-            p.callbackConfirm = onNextTaskConfirm;
-
-            PopupManager.open(p);
-        }
-
-        private function onNextTaskConfirm():void
-        {
-            // Go to the next task
-            var newTaskIndex:int = tasks.indexOf(task) + 1;
-            State.write("task", tasks[newTaskIndex]);
+            map.validateAllowedLayers();
         }
 
         private function onAllTasks(event:MouseEvent):void
         {
             // todo open all tasks popup
             var p:Popup = new Popup();
-            PopupManager.open(p);
+            //PopupManager.open(p);
         }
         ]]>
     </fx:Script>
 
-    <s:HGroup width="100%"
-              height="100%"
-              padding="15"
-              gap="15">
+    <s:Group width="100%"
+             height="100%">
 
-        <s:Group width="100%"
-                 height="100%">
+        <s:HGroup width="100%"
+                  height="100%"
+                  padding="15"
+                  gap="15">
 
-            <!--Canvas-->
+            <mx:ViewStack id="viewStackPanes"
+                          width="240"
+                          height="100%"
+                          visible="false"
+                          includeInLayout="false">
+                <s:NavigatorContent id="viewLayers"
+                                    width="100%"
+                                    height="100%">
+                    <p:PaneLayers id="paneLayers"
+                                  width="100%"
+                                  height="100%"/>
+                </s:NavigatorContent>
+            </mx:ViewStack>
 
+            <s:Group width="100%"
+                     height="100%">
 
-            <s:HGroup verticalAlign="middle">
-                <!--Task Actions-->
-                <s:Panel skinClass="ui.skins.PanelSkinOutline"
-                         maxWidth="200">
-                    <s:VGroup width="100%">
-                        <s:HGroup width="100%">
-                            <s:Label id="labelTaskNumber"
-                                     color="{Color.themePrimary}"/>
-                            <s:Label id="labelTaskName"
-                                     showTruncationTip="true"
-                                     width="100%"/>
-                        </s:HGroup>
+                <!--Canvas-->
+                <c:Canvas id="canvas"
+                          width="100%"
+                          height="100%"/>
 
-                    </s:VGroup>
-                </s:Panel>
+                <!--Map Controls-->
+                <s:HGroup width="100%"
+                          top="10"
+                          left="10"
+                          verticalAlign="middle">
+                    <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                              icon="{Icons.Layers}"
+                              toolTip="Layers"
+                              click="onToggleLayers(event)"/>
+                </s:HGroup>
 
-                <s:Button skinClass="ui.skins.ButtonSkinIcon"
-                          icon="{Icons.Tasks}"
-                          toolTip="All tasks"
-                          click="onAllTasks(event)"/>
-            </s:HGroup>
+            </s:Group>
 
-        </s:Group>
-
-        <!--Task Actions & Next Button-->
-        <s:Panel skinClass="ui.skins.PanelSkinOutline"
-                 width="320"
-                 height="100%">
-            <s:VGroup width="100%"
-                      height="100%">
+            <!--Task Actions & Next Button-->
+            <s:Panel skinClass="ui.skins.PanelSkinOutline"
+                     width="320"
+                     height="100%">
 
                 <s:VGroup width="100%"
                           height="100%">
 
+                    <!--Task Actions-->
+                    <s:HGroup width="100%"
+                              verticalAlign="middle"
+                              padding="10">
+                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                  icon="{Icons.Tasks}"
+                                  toolTip="All tasks"
+                                  click="onAllTasks(event)"/>
+
+                        <s:Label id="labelTaskNumber"
+                                 color="{Color.themePrimary}"
+                                 toolTip="Task progress"/>
+
+                        <s:Label id="labelTaskName"
+                                 showTruncationTip="true"
+                                 width="100%"/>
+                    </s:HGroup>
+
+                    <toolbar:Toolbar width="100%"
+                                     height="100%"/>
+
                 </s:VGroup>
+            </s:Panel>
 
-                <s:Button id="buttonNextTask"
-                          label="Next Task"
-                          click="onNextTask(event)"/>
-            </s:VGroup>
-        </s:Panel>
+        </s:HGroup>
 
-    </s:HGroup>
+    </s:Group>
 
 </s:Group>

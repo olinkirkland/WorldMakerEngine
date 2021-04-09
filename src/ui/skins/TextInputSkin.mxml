@@ -115,7 +115,7 @@
 
             <s:Button id="buttonClear"
                       skinClass="ui.skins.ButtonSkinIcon"
-                      icon="{Icons.Multiply}"
+                      icon="{Icons.Clear}"
                       width="16"
                       height="16"
                       click="{clear()}"/>

@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:c="ui.components.*"
+                autoDrawBackground="false"
+                width="100%">
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="disabled"/>
+        <s:State name="down"/>
+        <s:State name="over"/>
+        <s:State name="up"/>
+        <s:State name="selected"/>
+    </s:states>
+
+    <fx:Script><![CDATA[
+        import events.LayerEvent;
+
+        import game.Layer;
+
+        import global.Color;
+
+        import global.Icons;
+
+        private var layer:Layer;
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            if (!value)
+                return;
+
+            layer = value as Layer;
+
+            labelName.text = layer.id;
+            buttonToggle.setStyle("icon", layer.visible ? Icons.Show : Icons.Hide);
+
+            panelContent.alpha = layer.allowed ? 1 : .3;
+            panelContent.enabled = layer.allowed;
+            groupLock.visible = !layer.allowed;
+        }
+
+        private function onUp(event:MouseEvent):void
+        {
+            // Swap with the item above
+            dispatchEvent(new LayerEvent(LayerEvent.UP, layer));
+        }
+
+        private function onDown(event:MouseEvent):void
+        {
+            // Swap with the item below
+            dispatchEvent(new LayerEvent(LayerEvent.DOWN, layer));
+        }
+
+        private function onToggle(event:MouseEvent):void
+        {
+            layer.visible = !layer.visible;
+            dispatchEvent(new LayerEvent(LayerEvent.TOGGLE, layer));
+        }
+        ]]>
+    </fx:Script>
+
+    <s:HGroup width="100%">
+
+        <s:Group width="100%">
+
+            <s:Panel id="panelContent"
+                     skinClass="ui.skins.PanelSkinOutline"
+                     width="100%">
+                <s:HGroup width="100%"
+                          verticalAlign="middle">
+                    <s:Button id="buttonToggle"
+                              skinClass="ui.skins.ButtonSkinIcon"
+                              click="onToggle(event)"/>
+
+                    <s:Label id="labelName"
+                             width="100%"/>
+
+                    <s:HGroup>
+                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                  icon="{Icons.Up}"
+                                  click="onUp(event)"/>
+                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                  icon="{Icons.Down}"
+                                  click="onDown(event)"/>
+                    </s:HGroup>
+                </s:HGroup>
+            </s:Panel>
+
+            <s:VGroup id="groupLock"
+                      width="100%"
+                      height="100%"
+                      horizontalAlign="center"
+                      verticalAlign="middle">
+                <c:ColorBitmapImage source="{Icons.Lock}"
+                                    color="{Color.textLow}"/>
+            </s:VGroup>
+
+        </s:Group>
+
+    </s:HGroup>
+
+
+</s:ItemRenderer>

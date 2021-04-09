@@ -3,6 +3,8 @@
          xmlns:s="library://ns.adobe.com/flex/spark"
          implements="mx.core.IToolTip,mx.core.IFontContextComponent">
     <fx:Script><![CDATA[
+        import com.greensock.TweenLite;
+
         import global.Color;
 
         import mx.core.UIComponent;

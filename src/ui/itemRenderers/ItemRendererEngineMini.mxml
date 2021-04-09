@@ -16,14 +16,6 @@
     </s:states>
 
     <fx:Script><![CDATA[
-        import data.EngineData;
-
-        import global.Color;
-        import global.Icons;
-
-        import mx.events.FlexEvent;
-
-        private var engineData:EngineData;
 
         private function onCreationComplete(event:FlexEvent):void
         {
