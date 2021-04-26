@@ -5,15 +5,20 @@
                xmlns:g="game.*"
                creationComplete="onCreationComplete(event)"
                width="100%"
-               height="100%">
+               height="100%"
+               frameRate="60"
+               backgroundColor="0x212429">
 
     <fx:Style source="/assets/css/global.css"/>
 
     <fx:Script><![CDATA[
+        import com.greensock.TweenLite;
+
         import events.PopupEvent;
 
         import global.Color;
         import global.Icons;
+        import global.Local;
         import global.Signal;
 
         import managers.State;
@@ -72,7 +77,6 @@
         {
             // Close all existing popups
             // Expect only one popup at a time since popups are designed to be modal only
-            popupModalRectangle.visible = false;
             while (groupPopups.numElements > 0)
                 Popup(groupPopups.getElementAt(0)).close();
         }
@@ -81,8 +85,14 @@
         {
             callLater(function ():void
             {
-                popupModalRectangle.includeInLayout = popupModalRectangle.visible = groupPopups.numElements > 0;
+                popupModalRectangle.includeInLayout = popupModalRectangle.visible = true;
+                TweenLite.to(popupModalRectangle, .5, {alpha: groupPopups.numElements > 0 ? 1 : 0, onComplete: validatePopupModalRectangle});
             });
+
+            function validatePopupModalRectangle():void
+            {
+                popupModalRectangle.includeInLayout = popupModalRectangle.visible = popupModalRectangle.alpha == 1;
+            }
         }
 
         public function set callbackSave(f:Function):void
@@ -92,7 +102,7 @@
 
         private function onClickSave(event:MouseEvent):void
         {
-            buttonSave.label = "Save";
+            buttonSave.label = Local.text("save");
             buttonSave.enabled = false;
             State.save();
 
@@ -110,14 +120,6 @@
     <s:Group width="100%"
              height="100%">
 
-        <!--Background-->
-        <s:Rect width="100%"
-                height="100%">
-            <s:fill>
-                <s:SolidColor color="{Color.fillLow}"/>
-            </s:fill>
-        </s:Rect>
-
         <!--Frame-->
         <s:VGroup width="100%"
                   height="100%">
@@ -129,7 +131,7 @@
                                          height="100%"
                                          blurX="10"
                                          blurY="10"
-                                         alpha="0.3"
+                                         alpha=".5"
                                          distance="0"
                                          angle="90"
                                          color="{Color.black}"/>
@@ -158,7 +160,7 @@
 
                     <s:Label id="labelTask"/>
                     <s:Button id="buttonSave"
-                              label="Save"
+                              label="{Local.text('save')}"
                               icon="{Icons.Save}"
                               click="onClickSave(event)"/>
                 </s:HGroup>
@@ -175,12 +177,13 @@
                   width="100%"
                   height="100%"
                   visible="false"
-                  includeInLayout="false">
+                  includeInLayout="false"
+                  alpha="0">
             <s:Rect width="100%"
                     height="100%">
                 <s:fill>
                     <s:SolidColor color="{Color.black}"
-                                  alpha=".4"/>
+                                  alpha=".6"/>
                 </s:fill>
             </s:Rect>
         </s:VGroup>

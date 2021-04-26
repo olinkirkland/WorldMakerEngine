@@ -18,10 +18,13 @@
         import events.LayerEvent;
 
         import game.Layer;
+        import game.Map;
 
         import global.Color;
 
         import global.Icons;
+        import global.Local;
+        import global.Util;
 
         private var layer:Layer;
 
@@ -31,14 +34,20 @@
             if (!value)
                 return;
 
+            buttonUp.enabled = itemIndex > 0;
+            buttonDown.enabled = itemIndex < Map.instance.layers.length - 1;
+
             layer = value as Layer;
 
-            labelName.text = layer.id;
+            labelName.text = Local.text(Util.camelCaseToUnderScore(layer.id));
             buttonToggle.setStyle("icon", layer.visible ? Icons.Show : Icons.Hide);
+            buttonToggle.enabled = layer.allowed;
+            labelName.alpha = labelIndex.alpha = layer.allowed ? 1 : .5;
 
-            panelContent.alpha = layer.allowed ? 1 : .3;
-            panelContent.enabled = layer.allowed;
-            groupLock.visible = !layer.allowed;
+            if (!layer.allowed)
+                buttonToggle.setStyle("icon", Icons.Lock);
+
+            labelIndex.text = "" + itemIndex;
         }
 
         private function onUp(event:MouseEvent):void
@@ -65,36 +74,42 @@
 
         <s:Group width="100%">
 
-            <s:Panel id="panelContent"
-                     skinClass="ui.skins.PanelSkinOutline"
-                     width="100%">
-                <s:HGroup width="100%"
+            <s:VGroup width="100%"
+                      gap="0">
+
+                <s:HGroup id="groupContent"
+                          width="100%"
+                          padding="5"
+                          paddingTop="10"
+                          paddingBottom="10"
                           verticalAlign="middle">
+
+                    <s:Label id="labelIndex"/>
+
                     <s:Button id="buttonToggle"
                               skinClass="ui.skins.ButtonSkinIcon"
                               click="onToggle(event)"/>
-
                     <s:Label id="labelName"
                              width="100%"/>
 
                     <s:HGroup>
-                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                        <s:Button id="buttonUp"
+                                  skinClass="ui.skins.ButtonSkinIcon"
                                   icon="{Icons.Up}"
                                   click="onUp(event)"/>
-                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                        <s:Button id="buttonDown"
+                                  skinClass="ui.skins.ButtonSkinIcon"
                                   icon="{Icons.Down}"
                                   click="onDown(event)"/>
                     </s:HGroup>
                 </s:HGroup>
-            </s:Panel>
+                <s:Line width="100%">
+                    <s:stroke>
+                        <s:SolidColorStroke color="{Color.textLow}"
+                                            alpha=".5"/>
+                    </s:stroke>
+                </s:Line>
 
-            <s:VGroup id="groupLock"
-                      width="100%"
-                      height="100%"
-                      horizontalAlign="center"
-                      verticalAlign="middle">
-                <c:ColorBitmapImage source="{Icons.Lock}"
-                                    color="{Color.textLow}"/>
             </s:VGroup>
 
         </s:Group>

@@ -6,6 +6,8 @@
          title="Popup">
 
     <fx:Script><![CDATA[
+        import com.greensock.TweenLite;
+
         import managers.PopupManager;
 
         import mx.events.FlexEvent;
@@ -15,6 +17,7 @@
         public function onCreationComplete(event:FlexEvent):void
         {
             visible = false;
+            TweenLite.fromTo(this, 1, {alpha:0}, {alpha: 1});
             callLater(function ():void
             {
                 visible = true;

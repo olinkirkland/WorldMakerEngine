@@ -25,7 +25,8 @@
             radiusX="4"
             radiusY="4">
         <s:fill>
-            <s:SolidColor color="{Color.textMedium}"/>
+            <s:SolidColor color="{Color.textLow}"
+                          color.over="{Color.textMedium}"/>
         </s:fill>
 
     </s:Rect>

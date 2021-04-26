@@ -8,9 +8,11 @@
         import events.LayerEvent;
 
         import game.Layer;
+        import game.Map;
 
         import global.Color;
         import global.Icons;
+        import global.Local;
 
         import managers.State;
 
@@ -84,11 +86,18 @@
             {
                 if (layer.allowed)
                     allowedCount++;
-                if (layer.visible)
+                if (layer.allowed && layer.visible)
                     visibleCount++;
             }
 
             labelLayersCount.text = visibleCount + "/" + allowedCount;
+        }
+
+        private function onResetLayers(event:MouseEvent):void
+        {
+            Map.instance.resetLayers();
+            layers.refresh();
+            validateLayersCount();
         }
         ]]>
     </fx:Script>
@@ -97,9 +106,10 @@
         <s:HGroup width="100%"
                   verticalAlign="middle"
                   padding="10">
-            <s:Label text="Map Layers"/>
+            <s:Label text="{Local.text('map_layers')}"/>
             <s:Label id="labelLayersCount"
-                     color="{Color.themePrimary}"/>
+                     color="{Color.themePrimary}"
+                     toolTip="{Local.text('layers_count_tooltip')}"/>
             <s:Spacer width="100%"/>
             <s:Button skinClass="ui.skins.ButtonSkinIcon"
                       icon="{Icons.Multiply}"
@@ -114,5 +124,10 @@
                 horizontalScrollPolicy="off"
                 preventSelection="true"
                 itemRenderer="ui.itemRenderers.ItemRendererLayer"/>
+        <s:HGroup width="100%"
+                  horizontalAlign="center">
+            <s:Button label="{Local.text('reset')}"
+                      click="onResetLayers(event)"/>
+        </s:HGroup>
     </s:VGroup>
 </s:Panel>

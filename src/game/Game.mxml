@@ -2,9 +2,9 @@
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
          xmlns:c="ui.components.*"
-         xmlns:toolbar="ui.toolbars.*"
          xmlns:mx="library://ns.adobe.com/flex/mx"
          xmlns:p="ui.panes.*"
+         xmlns:ui="ui.*"
          creationComplete="onCreationComplete(event)">
 
     <fx:Script>
@@ -14,14 +14,21 @@
 
         import global.Color;
         import global.Icons;
+        import global.Local;
+        import global.Util;
 
+        import managers.PopupManager;
         import managers.State;
 
         import mx.events.FlexEvent;
 
-        import ui.popups.Popup;
+        import ui.popups.PopupConfirm;
+
+        import ui.popups.PopupTasks;
+        import ui.toolbars.Toolbar;
 
         private var map:Map;
+        private var toolbar:Toolbar;
 
         private function onCreationComplete(event:FlexEvent):void
         {
@@ -69,26 +76,81 @@
         {
             validateTask();
             paneLayers.validate();
+            validateNextTaskButton();
+        }
+
+        private function validateNextTaskButton():void
+        {
+            var nextTaskIndex:int = Task.byId(State.read("task")).index + 1;
+            if (nextTaskIndex >= Task.tasks.length)
+                buttonNextTask.enabled = buttonNextTask.visible = buttonNextTask.includeInLayout = false;
         }
 
         private function validateTask():void
         {
+            // Did the task change?
             if (State.read("task") == undefined)
                 State.write("task", TaskId.READ_INTRODUCTION);
 
             var taskId:String = State.read("task");
+            var task:Task = Task.byId(State.read("task"));
 
-            labelTaskNumber.text = (Task.byId(taskId).index + 1) + "/" + Task.tasks.length;
-            labelTaskName.text = taskId;
+            if (toolbar)
+            {
+                // Don't reload the toolbar if it's the same
+                var s:String = toolbar.className;
+                var t:String = getQualifiedClassName(task.toolbar);
+                t = t.substr(t.indexOf("::") + "::".length);
+                if (s == t)
+                    return;
+            }
+
+            labelTaskNumber.text = (task.index + 1) + "/" + Task.tasks.length;
+            labelTaskName.text = Local.text(Util.camelCaseToUnderScore(task.id));
+
+            if (!toolbar || toolbar.taskId != taskId)
+            {
+                // Dispose existing toolbar
+                if (toolbar)
+                {
+                    toolbar.dispose();
+                    groupToolbar.removeElement(toolbar);
+                }
+
+                toolbar = new task.toolbar;
+                toolbar.percentWidth = 100;
+                toolbar.percentHeight = 100;
+                groupToolbar.addElement(toolbar);
+            }
 
             map.validateAllowedLayers();
         }
 
         private function onAllTasks(event:MouseEvent):void
         {
-            // todo open all tasks popup
-            var p:Popup = new Popup();
-            //PopupManager.open(p);
+            var p:PopupTasks = new PopupTasks();
+            PopupManager.open(p);
+        }
+
+        private function onNextTask(event:MouseEvent):void
+        {
+            var p:PopupConfirm = new PopupConfirm();
+            p.header = Local.text("popup_complete_task_header"); // Complete this task
+            p.description = Local.text("popup_complete_task_description"); // Completing this task will lock in your choices permanently and progress to the next task
+            p.textConfirm = Local.text("yes_im_sure"); // Yes, I'm sure
+            p.textCancel = Local.text("cancel"); // Cancel
+            p.callbackConfirm = onNextTaskConfirm;
+
+            PopupManager.open(p);
+        }
+
+        public function onNextTaskConfirm():void
+        {
+            // Go to the next task
+            var newTaskIndex:int = Task.byId(State.read("task")).index + 1;
+            var newTask:Task = Task.byIndex(newTaskIndex);
+            State.write("task", newTask.id);
+            validateNextTaskButton();
         }
         ]]>
     </fx:Script>
@@ -102,7 +164,7 @@
                   gap="15">
 
             <mx:ViewStack id="viewStackPanes"
-                          width="240"
+                          width="320"
                           height="100%"
                           visible="false"
                           includeInLayout="false">
@@ -125,47 +187,61 @@
 
                 <!--Map Controls-->
                 <s:HGroup width="100%"
-                          top="10"
-                          left="10"
+                          top="20"
+                          left="20"
                           verticalAlign="middle">
                     <s:Button skinClass="ui.skins.ButtonSkinIcon"
                               icon="{Icons.Layers}"
-                              toolTip="Layers"
+                              toolTip="{Local.text('map_layers')}"
                               click="onToggleLayers(event)"/>
                 </s:HGroup>
 
             </s:Group>
 
-            <!--Task Actions & Next Button-->
+            <!--Task Actions-->
             <s:Panel skinClass="ui.skins.PanelSkinOutline"
                      width="320"
                      height="100%">
 
                 <s:VGroup width="100%"
-                          height="100%">
+                          height="100%"
+                          padding="10"
+                          gap="15">
 
                     <!--Task Actions-->
                     <s:HGroup width="100%"
-                              verticalAlign="middle"
-                              padding="10">
-                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
-                                  icon="{Icons.Tasks}"
-                                  toolTip="All tasks"
-                                  click="onAllTasks(event)"/>
+                              verticalAlign="middle">
 
                         <s:Label id="labelTaskNumber"
-                                 color="{Color.themePrimary}"
-                                 toolTip="Task progress"/>
+                                 toolTip="{Local.text('task_progress')}"/>
 
                         <s:Label id="labelTaskName"
                                  showTruncationTip="true"
                                  width="100%"/>
+
+                        <s:Button label="{Local.text('all_tasks')}"
+                                  icon="{Icons.Tasks}"
+                                  click="onAllTasks(event)"/>
                     </s:HGroup>
 
-                    <toolbar:Toolbar width="100%"
-                                     height="100%"/>
+                    <s:Scroller width="100%"
+                                height="100%"
+                                verticalScrollPolicy="auto"
+                                horizontalScrollPolicy="off">
+                        <s:Group id="groupToolbar"
+                                 width="100%"/>
+                    </s:Scroller>
+
+                    <s:HGroup width="100%"
+                              horizontalAlign="center">
+                        <s:Button id="buttonNextTask"
+                                  skinClass="ui.skins.ButtonThemeSkin"
+                                  label="{Local.text('next_task')}"
+                                  click="onNextTask(event)"/>
+                    </s:HGroup>
 
                 </s:VGroup>
+
             </s:Panel>
 
         </s:HGroup>

@@ -14,6 +14,9 @@ package global
         [Embed(source="/assets/icons/country.png")]
         public static const Country:Class;
 
+        [Embed(source="/assets/icons/dice.png")]
+        public static const Dice:Class;
+
         [Embed(source="/assets/icons/settings.png")]
         public static const Settings:Class;
 
@@ -29,11 +32,11 @@ package global
         [Embed(source="/assets/icons/import-yes.png")]
         public static const ImportYes:Class;
 
-        [Embed(source="/assets/icons/radioButtonEmpty.png")]
-        public static const RadioButtonEmpty:Class;
+        [Embed(source="/assets/icons/radioOff.png")]
+        public static const RadioOff:Class;
 
-        [Embed(source="/assets/icons/radioButtonFilled.png")]
-        public static const RadioButtonFilled:Class;
+        [Embed(source="/assets/icons/radioOn.png")]
+        public static const RadioOn:Class;
 
         [Embed(source="/assets/icons/down.png")]
         public static const Down:Class;
@@ -47,8 +50,8 @@ package global
         [Embed(source="/assets/icons/image.png")]
         public static const Image:Class;
 
-        [Embed(source="/assets/icons/plant.png")]
-        public static const Plant:Class;
+        [Embed(source="/assets/icons/flower.png")]
+        public static const Flower:Class;
 
         [Embed(source="/assets/icons/tasks.png")]
         public static const Tasks:Class;
@@ -113,6 +116,12 @@ package global
         [Embed(source="/assets/icons/checkmark.png")]
         public static const Checkmark:Class;
 
+        [Embed(source="/assets/icons/complete.png")]
+        public static const Complete:Class;
+
+        [Embed(source="/assets/icons/slider-thumb.png")]
+        public static const SliderThumb:Class;
+
         [Embed(source="/assets/icons/unavailable.png")]
         public static const Unavailable:Class;
 
@@ -148,9 +157,6 @@ package global
 
         [Embed(source="/assets/icons/lock.png")]
         public static const Lock:Class;
-
-        [Embed(source="/assets/icons/replay.png")]
-        public static const Replay:Class;
 
         [Embed(source="/assets/icons/openPane.png")]
         public static const OpenPane:Class;

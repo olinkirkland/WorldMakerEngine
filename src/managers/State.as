@@ -19,8 +19,19 @@ package managers
 
         public static function write(id:String, data:*):*
         {
+            // Ignore if it's the same
+            if (JSON.stringify(read(id)) == JSON.stringify(data))
+            {
+                trace("@State: (" + id + ") No change");
+                return;
+            }
+
             // Sets a property in the current state
-            trace(id + " was changed from " + currentState[id] + " to '" + data + "'");
+            if (currentState[id])
+                trace("@State: (" + id + ") " + JSON.stringify(currentState[id]) + " >> " + JSON.stringify(data));
+            else
+                trace("@State: (" + id + ") >> " + JSON.stringify(data));
+
             currentState[id] = data;
 
             dispatcher.dispatchEvent(new Event(STATE_CHANGED));
@@ -35,7 +46,7 @@ package managers
 
         public static function save():void
         {
-            if (callbackSave)
+            if (callbackSave != null)
                 callbackSave.apply(null, [currentState]);
         }
 

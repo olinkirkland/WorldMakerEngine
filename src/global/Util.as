@@ -7,6 +7,12 @@ package global
 
     public class Util
     {
+        public static var lorem:String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris maximus posuere lorem. Aliquam condimentum hendrerit interdum. Cras varius fringilla nisl, a placerat enim consequat nec. Cras porttitor aliquet mi.";
+
+        [Embed(source='/assets/seeds.json', mimeType='application/octet-stream')]
+        private static var SeedsJSON:Class;
+        private static var seeds:Array;
+
         private static var months:Array = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         private static var _timer:Timer;
@@ -20,6 +26,35 @@ package global
             }
 
             return _timer;
+        }
+
+        public static function randomSeed():String
+        {
+            if (!seeds)
+                seeds = JSON.parse(new SeedsJSON()) as Array;
+
+            return seeds[int(Math.random() * seeds.length - 1)];
+        }
+
+        public static function stringToSeed(str:String):Number
+        {
+            if (!str)
+                return 0;
+
+            var hash:Number = 0;
+            for (var i:int = 0; i < str.length; i++)
+            {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash = hash & hash;
+            }
+
+            return Math.abs(hash);
+        }
+
+        public static function camelCaseToUnderScore(str:String):String
+        {
+            var regex:RegExp = new RegExp(/([A-Z])/g);
+            return str.replace(regex, '_$1').toLowerCase();
         }
 
         public static function secondsSince(d:Date):Number

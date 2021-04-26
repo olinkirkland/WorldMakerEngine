@@ -7,7 +7,7 @@ package game
         public static const TECTONIC_PLATES:String = "tectonicPlates";
 
         public var id:String;
-        public var visible:Boolean;
+        public var visible:Boolean = true;
         public var allowed:Boolean;
     }
 }

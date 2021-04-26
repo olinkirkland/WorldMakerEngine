@@ -4,13 +4,16 @@ package game.task
 
     import managers.State;
 
-    import ui.toolbars.Toolbar;
+    import ui.toolbars.ToolbarIntroduction;
+    import ui.toolbars.ToolbarPoints;
+    import ui.toolbars.ToolbarTectonicPlates;
 
     public class Task
     {
         public static var tasks:Array;
 
         public var id:String;
+        public var name:String;
         public var index:int;
         public var toolbar:Class;
         public var layers:Array;
@@ -33,21 +36,21 @@ package game.task
             tasks.push(t = new Task());
             t.id = TaskId.READ_INTRODUCTION;
             t.index = tasks.length - 1;
-            t.toolbar = Toolbar;
+            t.toolbar = ToolbarIntroduction;
             t.layers = [];
 
             // Make Voronoi Points
             tasks.push(t = new Task());
             t.id = TaskId.MAKE_VORONOI_POINTS;
             t.index = tasks.length - 1;
-            t.toolbar = Toolbar;
+            t.toolbar = ToolbarPoints;
             t.layers = [Layer.POINTS, Layer.VORONOI];
 
             // Make Tectonic Plates
             tasks.push(t = new Task());
             t.id = TaskId.MAKE_TECTONIC_PLATES;
             t.index = tasks.length - 1;
-            t.toolbar = Toolbar;
+            t.toolbar = ToolbarTectonicPlates;
             t.layers = [Layer.POINTS, Layer.VORONOI, Layer.TECTONIC_PLATES];
         }
 

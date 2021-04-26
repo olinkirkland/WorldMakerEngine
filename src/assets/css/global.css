@@ -83,6 +83,19 @@ s|HScrollBar {
 }
 
 /*
+Sliders
+ */
+
+s|HSlider {
+    skinClass: ClassReference("ui.skins.sliders.HSliderSkin");
+}
+
+.slider {
+    thumb_color: #d3d3d3;
+    track_color: #eeeeee;
+}
+
+/*
 Misc
  */
 
@@ -104,4 +117,8 @@ s|CheckBox {
 
 s|DropDownList {
     skinClass: ClassReference("ui.skins.DropDownListSkin");
+}
+
+s|RadioButton {
+    skinClass: ClassReference("ui.skins.RadioButtonSkin");
 }

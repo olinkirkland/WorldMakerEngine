@@ -1,0 +1,244 @@
+<?xml version="1.0"?>
+<t:Toolbar xmlns:fx="http://ns.adobe.com/mxml/2009"
+           xmlns:s="library://ns.adobe.com/flex/spark"
+           xmlns:c="ui.components.*"
+           xmlns:t="ui.toolbars.*"
+           creationComplete="onCreationComplete(event)">
+
+    <fx:Script><![CDATA[
+        import global.Color;
+        import global.Icons;
+        import global.Local;
+        import global.Util;
+
+        import makers.PointsMaker;
+
+        import managers.State;
+
+        import mx.events.FlexEvent;
+
+        import spark.events.TextOperationEvent;
+
+        private var type:String;
+        private var seed:String;
+        private var spacing:Number;
+        private var precision:Number;
+        private var amount:Number;
+
+
+        override public function onCreationComplete(event:FlexEvent):void
+        {
+            super.onCreationComplete(event);
+
+            type = State.read("points.type");
+            if (!type)
+                type = PointsMaker.TYPE_POISSON_DISC;
+
+            seed = State.read("points.seed");
+            if (!seed)
+                applyRandomSeed();
+            inputSeed.text = seed;
+            updateSeedHash();
+
+            var radioButtonsByPointsType:Object = {};
+            radioButtonsByPointsType[PointsMaker.TYPE_POISSON_DISC] = radioButtonPoissonDisc;
+            radioButtonsByPointsType[PointsMaker.TYPE_RANDOM] = radioButtonRandom;
+            radioButtonsByPointsType[PointsMaker.TYPE_SQUARE] = radioButtonSquare;
+            radioButtonsByPointsType[PointsMaker.TYPE_HEX] = radioButtonHex;
+
+            radioButtonsByPointsType[type].selected = true;
+            validateDetails();
+        }
+
+        private function applyRandomSeed():void
+        {
+            // Choose a random seed and apply it
+            seed = Util.randomSeed();
+            State.write("points.seed", seed);
+        }
+
+        private function onChangePointsType(event:MouseEvent):void
+        {
+            var pointsTypeByRadioButton:Object = {
+                radioButtonPoissonDisc: PointsMaker.TYPE_POISSON_DISC,
+                radioButtonRandom: PointsMaker.TYPE_RANDOM,
+                radioButtonSquare: PointsMaker.TYPE_SQUARE,
+                radioButtonHex: PointsMaker.TYPE_HEX
+            };
+
+            type = pointsTypeByRadioButton[event.target.id];
+            validateDetails();
+        }
+
+        private function validateDetails():void
+        {
+            // Get the values from the State
+            spacing = State.read("points.spacing");
+            if (!spacing)
+                spacing = 5;
+            precision = State.read("points.precision");
+            if (!precision)
+                precision = 5;
+            amount = State.read("points.amount");
+            if (!amount)
+                amount = 2000;
+
+            // Spacing
+            sliderSpacing.label.text = Local.text('spacing');
+            sliderSpacing.slider.minimum = 1;
+            sliderSpacing.slider.maximum = 10;
+            sliderSpacing.slider.stepSize = 1;
+            sliderSpacing.slider.snapInterval = 1;
+            sliderSpacing.value = spacing;
+
+            // Precision
+            sliderPrecision.label.text = Local.text('precision');
+            sliderPrecision.slider.minimum = 1;
+            sliderPrecision.slider.maximum = 10;
+            sliderPrecision.slider.stepSize = 1;
+            sliderPrecision.slider.snapInterval = 1;
+            sliderPrecision.value = precision;
+
+            // Amount
+            sliderAmount.label.text = Local.text('amount');
+            sliderAmount.slider.minimum = 500;
+            sliderAmount.slider.maximum = 10000;
+            sliderAmount.slider.stepSize = 1;
+            sliderAmount.slider.snapInterval = 1;
+            sliderAmount.value = amount;
+
+            // Show/hide relevant parts
+            switch (type)
+            {
+                case PointsMaker.TYPE_POISSON_DISC:
+                    groupSeed.visible = groupSeed.includeInLayout = true;
+                    groupSpacing.visible = groupSpacing.includeInLayout = true;
+                    groupPrecision.visible = groupPrecision.includeInLayout = true;
+                    groupAmount.visible = groupAmount.includeInLayout = true;
+                    break;
+                case PointsMaker.TYPE_RANDOM:
+                    groupSeed.visible = groupSeed.includeInLayout = true;
+                    groupSpacing.visible = groupSpacing.includeInLayout = true;
+                    groupPrecision.visible = groupPrecision.includeInLayout = true;
+                    groupAmount.visible = groupAmount.includeInLayout = true;
+                    break;
+                case PointsMaker.TYPE_SQUARE:
+                case PointsMaker.TYPE_HEX:
+                    groupSeed.visible = groupSeed.includeInLayout = true;
+                    groupSpacing.visible = groupSpacing.includeInLayout = true;
+                    groupPrecision.visible = groupPrecision.includeInLayout = true;
+                    groupAmount.visible = groupAmount.includeInLayout = true;
+                    break;
+            }
+        }
+
+        private function onSeedChange(event:TextOperationEvent):void
+        {
+            // Seed was changed
+            seed = inputSeed.text;
+            State.write("points.seed", seed);
+
+            updateSeedHash();
+        }
+
+        private function onRandomizeSeed(event:MouseEvent):void
+        {
+            // Pick random seed
+            applyRandomSeed();
+            inputSeed.text = seed;
+
+            updateSeedHash();
+        }
+
+        private function updateSeedHash():void
+        {
+            labelSeedHash.text = Local.text('seed_hash', [Util.stringToSeed(seed)]);
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup width="100%"
+              height="100%"
+              verticalAlign="bottom">
+
+        <s:VGroup width="100%"
+                  height="100%"
+                  gap="15">
+
+            <s:Label text="{Local.text('task_make_voronoi_points_text')}"
+                     width="100%"/>
+
+            <s:VGroup width="100%">
+                <s:RadioButton groupName="pointsType"
+                               id="radioButtonPoissonDisc"
+                               label="{Local.text('points_type_poisson_disc')}"
+                               click="onChangePointsType(event)"/>
+
+                <s:RadioButton groupName="pointsType"
+                               id="radioButtonSquare"
+                               label="{Local.text('points_type_square')}"
+                               click="onChangePointsType(event)"/>
+
+                <s:RadioButton groupName="pointsType"
+                               id="radioButtonHex"
+                               label="{Local.text('points_type_hex')}"
+                               click="onChangePointsType(event)"/>
+
+                <s:RadioButton groupName="pointsType"
+                               id="radioButtonRandom"
+                               label="{Local.text('points_type_random')}"
+                               click="onChangePointsType(event)"/>
+            </s:VGroup>
+
+            <s:Panel skinClass="ui.skins.PanelSkinInset"
+                     width="100%">
+
+                <s:VGroup width="100%"
+                          padding="5"
+                          gap="15">
+
+                    <s:VGroup id="groupSeed"
+                              width="100%"
+                              gap="10">
+                        <s:Label text="{Local.text('seed')}"
+                                 width="100%"/>
+                        <s:VGroup width="100%">
+                            <s:HGroup width="100%">
+                                <c:IconTextInput id="inputSeed"
+                                                 width="100%"
+                                                 icon="{Icons.Flower}"
+                                                 change="onSeedChange(event)"/>
+                                <s:Button toolTip="{Local.text('randomize')}"
+                                          icon="{Icons.Dice}"
+                                          click="onRandomizeSeed(event)"/>
+                            </s:HGroup>
+                            <s:Label id="labelSeedHash"
+                                     fontSize="10"
+                                     color="{Color.textLow}"/>
+                        </s:VGroup>
+
+                    </s:VGroup>
+
+                    <s:VGroup id="groupAmount"
+                              width="100%">
+                        <c:SliderWithInput id="sliderAmount"
+                                           width="100%"/>
+                    </s:VGroup>
+
+                    <s:VGroup id="groupSpacing"
+                              width="100%">
+                        <c:SliderWithInput id="sliderSpacing"
+                                           width="100%"/>
+                    </s:VGroup>
+
+                    <s:VGroup id="groupPrecision"
+                              width="100%">
+                        <c:SliderWithInput id="sliderPrecision"
+                                           width="100%"/>
+                    </s:VGroup>
+                </s:VGroup>
+            </s:Panel>
+        </s:VGroup>
+    </s:VGroup>
+
+</t:Toolbar>

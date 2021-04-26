@@ -26,7 +26,7 @@
         public function animateTo(percent:Number):void
         {
             // Percent is a Number between 0 and 1
-            TweenLite.to(rectBar, 1, {percentWidth: percent * 100});
+            TweenLite.to(rectBar, .5, {percentWidth: percent * 100});
         }
         ]]>
     </fx:Script>
@@ -36,12 +36,9 @@
             height="100%"
             radiusX="{height/2}"
             radiusY="{height/2}">
-        <!--        <s:fill>-->
-        <!--            <s:SolidColor color="{Color.fillLow}"/>-->
-        <!--        </s:fill>-->
-        <s:stroke>
-            <s:SolidColorStroke color="{Color.themePrimary}"/>
-        </s:stroke>
+        <s:fill>
+            <s:SolidColor color="{Color.fillInset}"/>
+        </s:fill>
     </s:Rect>
 
     <s:HGroup width="100%"
@@ -54,7 +51,7 @@
                 radiusX="{rectBar.height/2}"
                 radiusY="{rectBar.height/2}">
             <s:fill>
-                <s:SolidColor color="{Color.themePrimary}"/>
+                <s:SolidColor color="{Color.textLow}"/>
             </s:fill>
         </s:Rect>
     </s:HGroup>
