@@ -26,12 +26,9 @@
                   skinClass="ui.skins.sliders.HSliderTrackSkin"/>
     </s:VGroup>
 
-    <s:VGroup width="100%"
-              height="40"
-              verticalAlign="middle">
-        <s:Button id="thumb"
-                  styleName="slider"
-                  skinClass="ui.skins.sliders.HSliderThumbSkin"/>
-    </s:VGroup>
+    <s:Button id="thumb"
+              top="13"
+              styleName="slider"
+              skinClass="ui.skins.sliders.HSliderThumbSkin"/>
 
 </s:SparkSkin>

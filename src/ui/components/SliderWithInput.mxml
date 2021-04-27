@@ -2,27 +2,9 @@
 <s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
           xmlns:s="library://ns.adobe.com/flex/spark"
           xmlns:c="ui.components.*"
-          width="100%" gap="0">
+          width="100%"
+          gap="5">
 
-    <s:Label id="label"
-             width="100%"
-             text="Slider"/>
-    <s:HGroup width="100%"
-              verticalAlign="middle"
-              gap="15">
-        <c:IconTextInput id="input"
-                         restrict="[0-9\.]"
-                         width="80"
-                         color="0xffffff"
-                         change="{onInputChange(event)}"/>
-        <s:HSlider id="slider"
-                   showDataTip="false"
-                   width="100%"
-                   stepSize="0.05"
-                   snapInterval="0.05"
-                   liveDragging="true"
-                   change="{onSliderChange(event)}"/>
-    </s:HGroup>
     <fx:Script><![CDATA[
         import spark.events.TextOperationEvent;
 
@@ -45,12 +27,14 @@
             if (input.text.length == 0)
                 input.text = String(0);
             _value = slider.value = Number(input.text);
+            dispatchEvent(new Event(Event.CHANGE));
         }
 
         private function onSliderChange(event:Event):void
         {
             input.text = formatForInput(slider.value);
             _value = Number(input.text);
+            dispatchEvent(new Event(Event.CHANGE));
         }
 
         private function formatForInput(n:Number):String
@@ -64,4 +48,24 @@
             return n.toFixed(0);
         }
         ]]></fx:Script>
+
+    <s:Label id="label"
+             width="100%"
+             text="Slider"/>
+    <s:HGroup width="100%"
+              verticalAlign="middle"
+              gap="15">
+        <c:IconTextInput id="input"
+                         restrict="[0-9\.]"
+                         width="80"
+                         color="0xffffff"
+                         change="{onInputChange(event)}"/>
+        <s:HSlider id="slider"
+                   showDataTip="false"
+                   width="100%"
+                   stepSize="0.05"
+                   snapInterval="0.05"
+                   liveDragging="true"
+                   change="{onSliderChange(event)}"/>
+    </s:HGroup>
 </s:VGroup>

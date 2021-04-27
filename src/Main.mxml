@@ -21,6 +21,8 @@
         import global.Local;
         import global.Signal;
 
+        import managers.PopupManager;
+
         import managers.State;
 
         import mx.events.FlexEvent;
@@ -32,6 +34,7 @@
 
         import ui.ToolTip;
         import ui.popups.Popup;
+        import ui.popups.PopupBusy;
 
         private function onCreationComplete(event:FlexEvent):void
         {
@@ -61,7 +64,7 @@
 
         private function onStateChange(event:Event):void
         {
-            buttonSave.label = "Save *";
+            buttonSave.label = Local.text("save") + " *";
         }
 
         private function openPopup(panel:Popup):void
@@ -86,7 +89,7 @@
             callLater(function ():void
             {
                 popupModalRectangle.includeInLayout = popupModalRectangle.visible = true;
-                TweenLite.to(popupModalRectangle, .5, {alpha: groupPopups.numElements > 0 ? 1 : 0, onComplete: validatePopupModalRectangle});
+                TweenLite.to(popupModalRectangle, .3, {alpha: groupPopups.numElements > 0 ? 1 : 0, onComplete: validatePopupModalRectangle});
             });
 
             function validatePopupModalRectangle():void
@@ -103,13 +106,9 @@
         private function onClickSave(event:MouseEvent):void
         {
             buttonSave.label = Local.text("save");
-            buttonSave.enabled = false;
-            State.save();
-
-            setTimeout(function ():void
-            {
-                buttonSave.enabled = true;
-            }, 1000);
+            var p:PopupBusy = new PopupBusy();
+            p.calculation = State.save;
+            PopupManager.open(p);
         }
 
         public function load(u:Object):void

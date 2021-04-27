@@ -14,6 +14,9 @@ package global
         [Embed(source="/assets/icons/country.png")]
         public static const Country:Class;
 
+        [Embed(source="/assets/icons/hourglass.png")]
+        public static const Hourglass:Class;
+
         [Embed(source="/assets/icons/dice.png")]
         public static const Dice:Class;
 

@@ -4,11 +4,12 @@
          xmlns:c="ui.components.*"
          xmlns:mx="library://ns.adobe.com/flex/mx"
          xmlns:p="ui.panes.*"
-         xmlns:ui="ui.*"
          creationComplete="onCreationComplete(event)">
 
     <fx:Script>
         <![CDATA[
+        import com.greensock.TweenLite;
+
         import game.task.Task;
         import game.task.TaskId;
 
@@ -22,8 +23,9 @@
 
         import mx.events.FlexEvent;
 
-        import ui.popups.PopupConfirm;
+        import ui.popups.PopupBusy;
 
+        import ui.popups.PopupConfirm;
         import ui.popups.PopupTasks;
         import ui.toolbars.Toolbar;
 
@@ -76,10 +78,11 @@
         {
             validateTask();
             paneLayers.validate();
-            validateNextTaskButton();
+            validateButtonNextTask();
+            callLater(validateButtonApply);
         }
 
-        private function validateNextTaskButton():void
+        private function validateButtonNextTask():void
         {
             var nextTaskIndex:int = Task.byId(State.read("task")).index + 1;
             if (nextTaskIndex >= Task.tasks.length)
@@ -121,6 +124,12 @@
                 toolbar.percentWidth = 100;
                 toolbar.percentHeight = 100;
                 groupToolbar.addElement(toolbar);
+                scrollerToolbar.visible = false;
+                setTimeout(function ():void
+                {
+                    scrollerToolbar.visible = true;
+                    TweenLite.fromTo(scrollerToolbar, .5, {alpha: 0}, {alpha: 1});
+                }, 500);
             }
 
             map.validateAllowedLayers();
@@ -130,6 +139,22 @@
         {
             var p:PopupTasks = new PopupTasks();
             PopupManager.open(p);
+        }
+
+        private function onApply(event:MouseEvent):void
+        {
+            var p:PopupBusy = new PopupBusy();
+            p.calculation = Map.instance.calculate;
+            p.callbackComplete = validateButtonApply;
+            PopupManager.open(p);
+        }
+
+        private function validateButtonApply():void
+        {
+            var i:int = 0;
+            for (var category:String in Map.instance.invalid)
+                i++;
+            buttonApply.label = Local.text("apply") + (i > 0 ? " *" : "");
         }
 
         private function onNextTask(event:MouseEvent):void
@@ -150,7 +175,7 @@
             var newTaskIndex:int = Task.byId(State.read("task")).index + 1;
             var newTask:Task = Task.byIndex(newTaskIndex);
             State.write("task", newTask.id);
-            validateNextTaskButton();
+            validateButtonNextTask();
         }
         ]]>
     </fx:Script>
@@ -224,7 +249,8 @@
                                   click="onAllTasks(event)"/>
                     </s:HGroup>
 
-                    <s:Scroller width="100%"
+                    <s:Scroller id="scrollerToolbar"
+                                width="100%"
                                 height="100%"
                                 verticalScrollPolicy="auto"
                                 horizontalScrollPolicy="off">
@@ -234,6 +260,9 @@
 
                     <s:HGroup width="100%"
                               horizontalAlign="center">
+                        <s:Button id="buttonApply"
+                                  label="{Local.text('apply')}"
+                                  click="onApply(event)"/>
                         <s:Button id="buttonNextTask"
                                   skinClass="ui.skins.ButtonThemeSkin"
                                   label="{Local.text('next_task')}"

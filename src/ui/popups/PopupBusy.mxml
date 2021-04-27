@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<popups:Popup xmlns:fx="http://ns.adobe.com/mxml/2009"
+              xmlns:s="library://ns.adobe.com/flex/spark"
+              xmlns:popups="ui.popups.*"
+              xmlns:c="ui.components.*"
+              skinClass="ui.skins.PanelSkinHidden">
+
+    <fx:Script><![CDATA[
+        import com.greensock.TweenMax;
+        import com.greensock.easing.Linear;
+
+        import global.Color;
+        import global.Icons;
+
+        import mx.events.FlexEvent;
+
+        public var callbackComplete:Function = null;
+        public var calculation:Function = null;
+
+        override public function onCreationComplete(event:FlexEvent):void
+        {
+            super.onCreationComplete(event);
+
+            TweenMax.fromTo(groupIcon, 1, {rotation: 0, ease: Linear.easeNone}, {rotation: 360, repeat: -1, ease: Linear.easeNone});
+
+            setTimeout(function ():void
+            {
+                calculation.apply();
+                callLater(function ():void
+                {
+                    if (callbackComplete != null)
+                        callbackComplete.apply();
+                    close();
+                })
+            }, (fadeSpeed + .1) * 1000)
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup width="50"
+              height="50"
+              horizontalAlign="center"
+              verticalAlign="middle">
+        <s:Group id="groupIcon"
+                 width="0"
+                 height="0">
+            <c:ColorBitmapImage left="-15"
+                                top="-15"
+                                width="30"
+                                height="30"
+                                source="{Icons.Hourglass}"
+                                color="{Color.themePrimary}"/>
+        </s:Group>
+    </s:VGroup>
+</popups:Popup>

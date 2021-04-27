@@ -14,10 +14,12 @@
 
         import spark.components.Group;
 
+        protected var fadeSpeed:Number = .5;
+
         public function onCreationComplete(event:FlexEvent):void
         {
             visible = false;
-            TweenLite.fromTo(this, 1, {alpha:0}, {alpha: 1});
+            TweenLite.fromTo(this, fadeSpeed, {alpha: 0}, {alpha: 1});
             callLater(function ():void
             {
                 visible = true;

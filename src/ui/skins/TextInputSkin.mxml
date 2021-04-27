@@ -44,6 +44,7 @@
             callLater(function ():void
             {
                 onTextChange(null);
+                setTimeout(validateButtonClear, 500);
             });
         }
 

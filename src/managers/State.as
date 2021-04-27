@@ -1,5 +1,7 @@
 package managers
 {
+    import events.StateEvent;
+
     import flash.events.Event;
     import flash.events.EventDispatcher;
     import flash.filesystem.File;
@@ -17,31 +19,66 @@ package managers
         public static var dispatcher:EventDispatcher = new EventDispatcher();
         public static var loaded:Boolean = false;
 
-        public static function write(id:String, data:*):*
+        public static function write(id:String, value:*, check:Boolean = true):*
         {
-            // Ignore if it's the same
-            if (JSON.stringify(read(id)) == JSON.stringify(data))
+            if (check)
             {
-                trace("@State: (" + id + ") No change");
-                return;
+                // Ignore if it's the same
+                if (JSON.stringify(read(id)) == JSON.stringify(value))
+                    return;
+
+                if (getPropertyByPath(id))
+                    trace("@State: (" + id + ") " + JSON.stringify(getPropertyByPath(id)) + " >> " + JSON.stringify(value));
+                else
+                    trace("@State: (" + id + ") >> " + JSON.stringify(value));
             }
-
             // Sets a property in the current state
-            if (currentState[id])
-                trace("@State: (" + id + ") " + JSON.stringify(currentState[id]) + " >> " + JSON.stringify(data));
-            else
-                trace("@State: (" + id + ") >> " + JSON.stringify(data));
+            setPropertyByPath(id, value);
 
-            currentState[id] = data;
+            dispatcher.dispatchEvent(new StateEvent(STATE_CHANGED, id));
 
-            dispatcher.dispatchEvent(new Event(STATE_CHANGED));
-            return data;
+            return value;
         }
 
         public static function read(id:String):*
         {
             // Gets a property in the current state
-            return currentState[id];
+            return getPropertyByPath(id);
+        }
+
+        private static function getPropertyByPath(path:String):*
+        {
+            // Paths are delimited by dot notation
+            var obj:* = currentState;
+            var arr:Array = path.split(".");
+            for each (var key:String in arr)
+            {
+                if (!obj.hasOwnProperty(key))
+                    return null;
+
+                obj = obj[key];
+            }
+
+            return obj;
+        }
+
+        private static function setPropertyByPath(path:String, value:*):void
+        {
+            // Paths are delimited by dot notation
+            var obj:* = currentState;
+            var arr:Array = path.split(".");
+            for (var i:int = 0; i < arr.length; i++)
+            {
+                var key:String = arr[i];
+
+                if (i == arr.length - 1)
+                    obj[key] = value;
+
+                if (!obj.hasOwnProperty(key))
+                    obj[key] = {};
+
+                obj = obj[key];
+            }
         }
 
         public static function save():void
@@ -55,7 +92,7 @@ package managers
             // Only triggered in standalone mode
             var fileStream:FileStream = new FileStream();
             fileStream.open(File.applicationStorageDirectory.resolvePath("localSave.json"), FileMode.WRITE);
-            fileStream.writeUTFBytes(JSON.stringify(u, null, " "));
+            fileStream.writeUTFBytes(JSON.stringify(u));
             fileStream.close();
         }
 
@@ -70,7 +107,6 @@ package managers
         public static function loadLocal():void
         {
             // Only triggered in standalone mode
-
             var file:File = File.applicationStorageDirectory.resolvePath("localSave.json");
             if (!file.exists)
             {

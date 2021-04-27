@@ -47,7 +47,7 @@
             radioButtonsByPointsType[PointsMaker.TYPE_HEX] = radioButtonHex;
 
             radioButtonsByPointsType[type].selected = true;
-            validateDetails();
+            validate();
         }
 
         private function applyRandomSeed():void
@@ -59,6 +59,11 @@
 
         private function onChangePointsType(event:MouseEvent):void
         {
+            validate();
+        }
+
+        private function validate():void
+        {
             var pointsTypeByRadioButton:Object = {
                 radioButtonPoissonDisc: PointsMaker.TYPE_POISSON_DISC,
                 radioButtonRandom: PointsMaker.TYPE_RANDOM,
@@ -66,12 +71,36 @@
                 radioButtonHex: PointsMaker.TYPE_HEX
             };
 
-            type = pointsTypeByRadioButton[event.target.id];
-            validateDetails();
-        }
+            var selection:RadioButton = radioButtonPoissonDisc.group.selection;
+            if (selection != null)
+                type = pointsTypeByRadioButton[selection.id];
 
-        private function validateDetails():void
-        {
+            State.write("points.type", type);
+
+            // Show/hide relevant parts
+            switch (type)
+            {
+                case PointsMaker.TYPE_POISSON_DISC:
+                    groupSeed.visible = groupSeed.includeInLayout = true;
+                    sliderSpacing.visible = sliderSpacing.includeInLayout = true;
+                    sliderPrecision.visible = sliderPrecision.includeInLayout = true;
+                    sliderAmount.visible = sliderAmount.includeInLayout = false;
+                    break;
+                case PointsMaker.TYPE_RANDOM:
+                    groupSeed.visible = groupSeed.includeInLayout = true;
+                    sliderSpacing.visible = sliderSpacing.includeInLayout = false;
+                    sliderPrecision.visible = sliderPrecision.includeInLayout = false;
+                    sliderAmount.visible = sliderAmount.includeInLayout = true;
+                    break;
+                case PointsMaker.TYPE_SQUARE:
+                case PointsMaker.TYPE_HEX:
+                    groupSeed.visible = groupSeed.includeInLayout = false;
+                    sliderSpacing.visible = sliderSpacing.includeInLayout = true;
+                    sliderPrecision.visible = sliderPrecision.includeInLayout = false;
+                    sliderAmount.visible = sliderAmount.includeInLayout = false;
+                    break;
+            }
+
             // Get the values from the State
             spacing = State.read("points.spacing");
             if (!spacing)
@@ -90,6 +119,7 @@
             sliderSpacing.slider.stepSize = 1;
             sliderSpacing.slider.snapInterval = 1;
             sliderSpacing.value = spacing;
+            sliderSpacing.addEventListener(Event.CHANGE, onChange, false, 0, true);
 
             // Precision
             sliderPrecision.label.text = Local.text('precision');
@@ -98,6 +128,7 @@
             sliderPrecision.slider.stepSize = 1;
             sliderPrecision.slider.snapInterval = 1;
             sliderPrecision.value = precision;
+            sliderPrecision.addEventListener(Event.CHANGE, onChange, false, 0, true);
 
             // Amount
             sliderAmount.label.text = Local.text('amount');
@@ -106,30 +137,7 @@
             sliderAmount.slider.stepSize = 1;
             sliderAmount.slider.snapInterval = 1;
             sliderAmount.value = amount;
-
-            // Show/hide relevant parts
-            switch (type)
-            {
-                case PointsMaker.TYPE_POISSON_DISC:
-                    groupSeed.visible = groupSeed.includeInLayout = true;
-                    groupSpacing.visible = groupSpacing.includeInLayout = true;
-                    groupPrecision.visible = groupPrecision.includeInLayout = true;
-                    groupAmount.visible = groupAmount.includeInLayout = true;
-                    break;
-                case PointsMaker.TYPE_RANDOM:
-                    groupSeed.visible = groupSeed.includeInLayout = true;
-                    groupSpacing.visible = groupSpacing.includeInLayout = true;
-                    groupPrecision.visible = groupPrecision.includeInLayout = true;
-                    groupAmount.visible = groupAmount.includeInLayout = true;
-                    break;
-                case PointsMaker.TYPE_SQUARE:
-                case PointsMaker.TYPE_HEX:
-                    groupSeed.visible = groupSeed.includeInLayout = true;
-                    groupSpacing.visible = groupSpacing.includeInLayout = true;
-                    groupPrecision.visible = groupPrecision.includeInLayout = true;
-                    groupAmount.visible = groupAmount.includeInLayout = true;
-                    break;
-            }
+            sliderAmount.addEventListener(Event.CHANGE, onChange, false, 0, true);
         }
 
         private function onSeedChange(event:TextOperationEvent):void
@@ -153,6 +161,18 @@
         private function updateSeedHash():void
         {
             labelSeedHash.text = Local.text('seed_hash', [Util.stringToSeed(seed)]);
+        }
+
+        private function onChange(event:Event):void
+        {
+            spacing = sliderSpacing.value;
+            State.write("points.spacing", spacing);
+
+            precision = sliderPrecision.value;
+            State.write("points.precision", precision);
+
+            amount = sliderAmount.value;
+            State.write("points.amount", amount);
         }
         ]]>
     </fx:Script>
@@ -219,23 +239,15 @@
 
                     </s:VGroup>
 
-                    <s:VGroup id="groupAmount"
-                              width="100%">
-                        <c:SliderWithInput id="sliderAmount"
-                                           width="100%"/>
-                    </s:VGroup>
+                    <c:SliderWithInput id="sliderAmount"
+                                       width="100%"/>
 
-                    <s:VGroup id="groupSpacing"
-                              width="100%">
-                        <c:SliderWithInput id="sliderSpacing"
-                                           width="100%"/>
-                    </s:VGroup>
+                    <c:SliderWithInput id="sliderSpacing"
+                                       width="100%"/>
 
-                    <s:VGroup id="groupPrecision"
-                              width="100%">
-                        <c:SliderWithInput id="sliderPrecision"
-                                           width="100%"/>
-                    </s:VGroup>
+                    <c:SliderWithInput id="sliderPrecision"
+                                       width="100%"/>
+
                 </s:VGroup>
             </s:Panel>
         </s:VGroup>

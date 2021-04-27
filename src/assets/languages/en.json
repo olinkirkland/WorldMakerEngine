@@ -30,5 +30,6 @@
   "seed": "Seed",
   "randomize": "Randomize",
   "seed_hash": "Hash: %%",
-  "amount": "Amount"
+  "amount": "Amount",
+  "please_wait": "Please wait"
 }
