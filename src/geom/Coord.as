@@ -1,11 +1,11 @@
 package geom
 {
-    public class Point
+    public class Coord
     {
         public var x:Number;
         public var y:Number;
 
-        public function Point(x:Number, y:Number)
+        public function Coord(x:Number, y:Number)
         {
             this.x = x;
             this.y = y;

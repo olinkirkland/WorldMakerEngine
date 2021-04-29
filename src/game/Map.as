@@ -10,7 +10,7 @@ package game
 
     import game.task.Task;
 
-    import geom.Point;
+    import geom.Coord;
 
     import global.Rand;
     import global.Util;
@@ -32,12 +32,12 @@ package game
         public var invalid:Object = {};
 
         private var bounds:Rectangle;
-        private var points:Vector.<Point>;
+        private var points:Vector.<Coord>;
         private var quad:QuadTree;
 
         private static var _instance:Map;
         private var defaultLayerOrder:Array = [Layer.POINTS, Layer.VORONOI, Layer.TECTONIC_PLATES];
-        private var categories:Array = ["points"];
+        private var categories:Array = ["dragArea", "points"];
         private var canvas:Canvas;
 
         public function Map(canvas:Canvas)
@@ -82,6 +82,13 @@ package game
             calculate(true);
         }
 
+        public function getNearestPoint(p:Coord):Coord
+        {
+            // Only return a point within a reasonable range
+            var arr:Vector.<Coord> = quad.queryFromPoint(p, 5);
+            return (arr.length == 0) ? null : arr[0];
+        }
+
         private function onStateChanged(event:StateEvent):void
         {
             var category:String = event.id.split(".")[0];
@@ -103,6 +110,9 @@ package game
 
                 switch (category)
                 {
+                    case "dragArea":
+                        drawDragArea();
+                        break;
                     case "points":
                         makePoints();
                         drawPoints();
@@ -115,13 +125,23 @@ package game
             invalid = [];
         }
 
+        private function drawDragArea():void
+        {
+            var g:Graphics = canvas.getLayer("dragArea").graphics;
+            g.clear();
+            g.lineStyle(1, 0xff0000);
+            g.beginFill(0xff0000, .2);
+            g.drawRect(0, 0, 2000, 1000);
+            g.endFill();
+        }
+
         private function makePoints():void
         {
             bounds = new Rectangle(0,
                     0,
                     2000,
                     1000);
-            points = new Vector.<Point>();
+            points = new Vector.<Coord>();
             quad = new QuadTree(bounds);
 
             var type:String = State.read("points.type");
@@ -141,7 +161,7 @@ package game
             State.write("points.points", points, false);
         }
 
-        private function addPoint(p:Point):void
+        private function addPoint(p:Coord):void
         {
             points.push(p);
             quad.insert(p);
@@ -154,7 +174,7 @@ package game
             for (var i:int = 0; i < amount; i++)
             {
                 // Add a random point
-                var p:Point = new Point(int(rand.between(0, bounds.width)), int(rand.between(0, bounds.height)));
+                var p:Coord = new Coord(int(rand.between(0, bounds.width)), int(rand.between(0, bounds.height)));
                 addPoint(p);
             }
         }
@@ -164,7 +184,7 @@ package game
             var g:Graphics = canvas.getLayer("points").graphics;
             g.clear();
             g.lineStyle(1, 0xffffff);
-            for each (var p:Point in points)
+            for each (var p:Coord in points)
                 g.drawCircle(p.x, p.y, 3);
         }
 

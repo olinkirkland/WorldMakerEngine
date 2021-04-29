@@ -1,14 +1,21 @@
 <?xml version="1.0"?>
 
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
-         xmlns:s="library://ns.adobe.com/flex/spark">
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         creationComplete="onCreationComplete(event)">
 
     <fx:Script><![CDATA[
         import mx.core.UIComponent;
-        import mx.core.UIComponent;
+        import mx.events.FlexEvent;
         import mx.events.ResizeEvent;
 
+        public static const ZOOM_CHANGED:String = "zoomChanged";
+
         private var layers:Object = {};
+        private var dragPoint:Point;
+        private var zoomLevels:Array = [.5, .8, .9, 1, 1.1, 1.2, 1.5, 2, 4];
+
+        public var zoomLevel:Number = 1;
 
         private function onLayerGroupContainerResize(event:ResizeEvent):void
         {
@@ -18,12 +25,26 @@
 
         public function zoomIn():void
         {
+            var zoomLevelIndex:int = zoomLevels.indexOf(zoomLevel);
+            if (zoomLevelIndex < 0)
+                zoomLevel = 1;
+            else if (zoomLevelIndex + 1 < zoomLevels.length)
+                zoomLevel = zoomLevels[zoomLevelIndex + 1];
 
+            layerGroup.scaleX = layerGroup.scaleY = zoomLevel;
+            dispatchEvent(new Event(ZOOM_CHANGED));
         }
 
         public function zoomOut():void
         {
+            var zoomLevelIndex:int = zoomLevels.indexOf(zoomLevel);
+            if (zoomLevelIndex < 0)
+                zoomLevel = 1;
+            else if (zoomLevelIndex > 0)
+                zoomLevel = zoomLevels[zoomLevelIndex - 1];
 
+            layerGroup.scaleX = layerGroup.scaleY = zoomLevel;
+            dispatchEvent(new Event(ZOOM_CHANGED));
         }
 
         public function getLayer(id:String):UIComponent
@@ -36,6 +57,36 @@
             }
 
             return layers[id];
+        }
+
+        private function onMouseDown(event:MouseEvent):void
+        {
+            dragPoint = new Point(event.stageX, event.stageY);
+        }
+
+        private function onMouseUp(event:MouseEvent):void
+        {
+            dragPoint = null;
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            systemManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+            systemManager.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+        }
+
+        private function onMouseMove(event:MouseEvent):void
+        {
+            if (dragPoint)
+            {
+                var newX:Number = systemManager.stage.mouseX - dragPoint.x;
+                var newY:Number = systemManager.stage.mouseY - dragPoint.y;
+                var distance:Point = new Point(newX, newY);
+
+                dragPoint = new Point(systemManager.stage.mouseX, systemManager.stage.mouseY);
+                layerGroup.x += distance.x;
+                layerGroup.y += distance.y;
+            }
         }
         ]]></fx:Script>
 
@@ -52,11 +103,10 @@
 
     <s:VGroup id="layerGroupContainer"
               padding="15"
-              width="100%"
-              height="100%"
-              resizeMode="scale"
+              includeInLayout="false"
               mask="{layerGroupMask}"
-              resize="onLayerGroupContainerResize(event)">
+              resize="onLayerGroupContainerResize(event)"
+              mouseDown="onMouseDown(event)">
 
         <s:Group id="layerGroup"
                  width="2000"

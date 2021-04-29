@@ -1,6 +1,6 @@
 package game.graph
 {
-    import geom.Point;
+    import geom.Coord;
 
     import flash.geom.Rectangle;
 
@@ -11,7 +11,7 @@ package game.graph
         private const cap:int = 50;
 
         public var bounds:Rectangle;
-        public var points:Vector.<Point>;
+        public var points:Vector.<Coord>;
         public var divided:Boolean = false;
 
         private var topLeft:QuadTree;
@@ -22,20 +22,20 @@ package game.graph
         public function QuadTree(bounds:Rectangle)
         {
             this.bounds = bounds;
-            points = new Vector.<Point>();
+            points = new Vector.<Coord>();
         }
 
 
-        public function query(range:Rectangle):Vector.<Point>
+        public function query(range:Rectangle):Vector.<Coord>
         {
-            var found:Vector.<Point> = new Vector.<Point>();
+            var found:Vector.<Coord> = new Vector.<Coord>();
             if (!bounds.intersects(range))
                 return found;
 
             if (divided)
                 found = found.concat(topLeft.query(range), topRight.query(range), bottomLeft.query(range), bottomRight.query(range));
             else if (points)
-                for each (var p:Point in points)
+                for each (var p:Coord in points)
                     if (range.contains(p.x, p.y))
                         found.push(p);
 
@@ -51,7 +51,7 @@ package game.graph
                 return topLeft.isRangePopulated(range) || topRight.isRangePopulated(range) || bottomLeft.isRangePopulated(range) || bottomRight.isRangePopulated(range);
             else
             {
-                for each (var p:Point in points)
+                for each (var p:Coord in points)
                     if (range.contains(p.x, p.y))
                         return true;
             }
@@ -59,13 +59,13 @@ package game.graph
             return false;
         }
 
-        public function queryFromPoint(point:Point, radius:Number):Vector.<Point>
+        public function queryFromPoint(point:Coord, radius:Number):Vector.<Coord>
         {
             return query(new Rectangle(point.x - radius, point.y - radius, radius * 2, radius * 2));
         }
 
 
-        public function insert(p:Point):Boolean
+        public function insert(p:Coord):Boolean
         {
             if (!bounds.contains(p.x, p.y))
                 return false;
@@ -99,7 +99,7 @@ package game.graph
             bottomRight = new QuadTree(new Rectangle(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, bounds.width / 2, bounds.height / 2));
 
             // Send the points to the divided quads
-            for each (var p:Point in points)
+            for each (var p:Coord in points)
                 if (topLeft.insert(p) || topRight.insert(p) || bottomLeft.insert(p) || bottomRight.insert(p))
                     continue;
             points = null;

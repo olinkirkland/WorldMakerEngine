@@ -11,6 +11,12 @@ package global
         [Embed(source="/assets/icons/home.png")]
         public static const Home:Class;
 
+        [Embed(source="/assets/icons/mouse.png")]
+        public static const Mouse:Class;
+
+        [Embed(source="/assets/icons/target.png")]
+        public static const Target:Class;
+
         [Embed(source="/assets/icons/country.png")]
         public static const Country:Class;
 
