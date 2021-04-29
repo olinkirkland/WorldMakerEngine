@@ -4,24 +4,64 @@
          xmlns:s="library://ns.adobe.com/flex/spark">
 
     <fx:Script><![CDATA[
+        import mx.core.UIComponent;
+        import mx.core.UIComponent;
         import mx.events.ResizeEvent;
+
+        private var layers:Object = {};
 
         private function onLayerGroupContainerResize(event:ResizeEvent):void
         {
             var t:Object = event.target;
             t.height = (t.width / t.contentWidth) * t.contentHeight;
         }
+
+        public function zoomIn():void
+        {
+
+        }
+
+        public function zoomOut():void
+        {
+
+        }
+
+        public function getLayer(id:String):UIComponent
+        {
+            if (!layers.hasOwnProperty(id))
+            {
+                var c:UIComponent = layers[id] = new UIComponent();
+                c.cacheAsBitmap = true;
+                layerGroup.addElement(c);
+            }
+
+            return layers[id];
+        }
         ]]></fx:Script>
+
+    <s:Group id="layerGroupMask"
+             width="100%"
+             height="100%">
+        <s:Rect width="100%"
+                height="100%">
+            <s:fill>
+                <s:SolidColor color="{0xff0000}"/>
+            </s:fill>
+        </s:Rect>
+    </s:Group>
 
     <s:VGroup id="layerGroupContainer"
               padding="15"
               width="100%"
               height="100%"
               resizeMode="scale"
+              mask="{layerGroupMask}"
               resize="onLayerGroupContainerResize(event)">
+
         <s:Group id="layerGroup"
-                 width="1200"
-                 height="600"/>
+                 width="2000"
+                 height="1000"/>
+
     </s:VGroup>
 
     <s:Rect width="100%"

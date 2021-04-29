@@ -2,6 +2,8 @@ package game
 {
     import events.StateEvent;
 
+    import flash.display.Graphics;
+
     import flash.geom.Rectangle;
 
     import game.graph.QuadTree;
@@ -20,6 +22,8 @@ package game
 
     import spark.primitives.Graphic;
 
+    import ui.components.Canvas;
+
     public class Map
     {
         public var layers:ArrayCollection = new ArrayCollection();
@@ -34,12 +38,15 @@ package game
         private static var _instance:Map;
         private var defaultLayerOrder:Array = [Layer.POINTS, Layer.VORONOI, Layer.TECTONIC_PLATES];
         private var categories:Array = ["points"];
+        private var canvas:Canvas;
 
-        public function Map()
+        public function Map(canvas:Canvas)
         {
             if (_instance)
                 throw new Error("Singletons can only have one instance");
             _instance = this;
+
+            this.canvas = canvas;
 
             defaultLayerOrder.reverse();
 
@@ -71,6 +78,8 @@ package game
 
             State.dispatcher.addEventListener(State.STATE_CHANGED, onStateChanged);
             layers.addEventListener(CollectionEvent.COLLECTION_CHANGE, onLayersChange);
+
+            calculate(true);
         }
 
         private function onStateChanged(event:StateEvent):void
@@ -96,6 +105,7 @@ package game
                 {
                     case "points":
                         makePoints();
+                        drawPoints();
                         break;
                     default:
                         break;
@@ -149,10 +159,19 @@ package game
             }
         }
 
+        private function drawPoints():void
+        {
+            var g:Graphics = canvas.getLayer("points").graphics;
+            g.clear();
+            g.lineStyle(1, 0xffffff);
+            for each (var p:Point in points)
+                g.drawCircle(p.x, p.y, 3);
+        }
+
         public static function get instance():Map
         {
             if (!_instance)
-                new Map();
+                new Map(null);
             return _instance;
         }
 
@@ -196,11 +215,6 @@ package game
                     layers.itemUpdated(layer);
                 }
             }
-        }
-
-        public function draw(g:Graphic, layerId:String):void
-        {
-            // Draws the content of a layer onto a graphic
         }
     }
 }

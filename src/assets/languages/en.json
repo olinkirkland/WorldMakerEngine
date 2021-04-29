@@ -31,5 +31,7 @@
   "randomize": "Randomize",
   "seed_hash": "Hash: %%",
   "amount": "Amount",
-  "please_wait": "Please wait"
+  "please_wait": "Please wait",
+  "zoom_in": "Zoom in",
+  "zoom_out": "Zoom out"
 }

@@ -31,7 +31,7 @@
                     if (callbackComplete != null)
                         callbackComplete.apply();
                     close();
-                })
+                });
             }, (fadeSpeed + .1) * 1000)
         }
         ]]>

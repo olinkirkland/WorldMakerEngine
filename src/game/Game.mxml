@@ -37,7 +37,7 @@
             if (!State.loaded)
                 State.loadLocal();
 
-            map = new Map();
+            map = new Map(canvas);
             paneLayers.listLayers.dataProvider = map.layers;
 
             addEventListeners();
@@ -177,6 +177,16 @@
             State.write("task", newTask.id);
             validateButtonNextTask();
         }
+
+        private function onZoomIn(event:MouseEvent):void
+        {
+            canvas.zoomIn();
+        }
+
+        private function onZoomOut(event:MouseEvent):void
+        {
+            canvas.zoomOut();
+        }
         ]]>
     </fx:Script>
 
@@ -211,15 +221,35 @@
                           height="100%"/>
 
                 <!--Map Controls-->
-                <s:HGroup width="100%"
-                          top="20"
-                          left="20"
-                          verticalAlign="middle">
-                    <s:Button skinClass="ui.skins.ButtonSkinIcon"
-                              icon="{Icons.Layers}"
-                              toolTip="{Local.text('map_layers')}"
-                              click="onToggleLayers(event)"/>
+                <s:HGroup width="100%">
+                    <s:Group>
+                        <s:Rect width="100%"
+                                height="100%"
+                                bottomRightRadiusX="10"
+                                bottomRightRadiusY="10">
+                            <s:fill>
+                                <s:SolidColor color="{Color.fillLow}"/>
+                            </s:fill>
+                        </s:Rect>
+                        <s:HGroup padding="5"
+                                  paddingLeft="10"
+                                  paddingRight="10">
+                            <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                      icon="{Icons.Layers}"
+                                      toolTip="{Local.text('map_layers')}"
+                                      click="onToggleLayers(event)"/>
+                            <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                      icon="{Icons.Plus}"
+                                      toolTip="{Local.text('zoom_in')}"
+                                      click="onZoomIn(event)"/>
+                            <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                      icon="{Icons.Minus}"
+                                      toolTip="{Local.text('zoom_out')}"
+                                      click="onZoomOut(event)"/>
+                        </s:HGroup>
+                    </s:Group>
                 </s:HGroup>
+
 
             </s:Group>
 
