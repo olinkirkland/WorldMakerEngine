@@ -1,18 +1,19 @@
 {
   "popup_all_tasks_text": "Tasks are performed sequentially, and are locked upon completion.",
   "task_read_introduction": "Read Introduction",
-  "task_make_voronoi_points": "Make Voronoi Points",
+  "task_make_voronoi_points": "Make Voronoi Diagram",
   "task_make_tectonic_plates": "Make Tectonic Plates",
   "task_read_introduction_text": "TODO This is the introduction text.",
   "task_make_voronoi_points_text": "Worlds are generated over a graph of adjacent cells. Cells are determined by using Delaunay triangulation on a list of points to create a Voronoi diagram. Points can be arranged according to several methods.",
   "task_make_tectonic_plates_text": "TODO This is the make tectonic plates text.",
-  "map_layers": "Map Layers",
+  "map_layers": "Layers",
   "save": "Save",
   "apply": "Apply",
   "next_task": "Next Task",
   "all_tasks": "All Tasks",
   "tectonic_plates": "Tectonic Plates",
   "voronoi": "Voronoi",
+  "delaunay": "Delaunay",
   "points": "Points",
   "popup_complete_task_header": "Are you sure?",
   "popup_complete_task_description": "Completing this task will lock in the changes you have made to your world.",
@@ -33,5 +34,6 @@
   "amount": "Amount",
   "please_wait": "Please wait",
   "zoom_in": "Zoom in",
-  "zoom_out": "Zoom out"
+  "zoom_out": "Zoom out",
+  "center_map": "Center Map"
 }

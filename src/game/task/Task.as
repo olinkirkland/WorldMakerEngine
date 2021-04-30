@@ -17,6 +17,7 @@ package game.task
         public var index:int;
         public var toolbar:Class;
         public var layers:Array;
+        public var operations:Array;
 
         public function Task()
         {
@@ -38,20 +39,23 @@ package game.task
             t.index = tasks.length - 1;
             t.toolbar = ToolbarIntroduction;
             t.layers = [];
+            t.operations = [];
 
             // Make Voronoi Points
             tasks.push(t = new Task());
             t.id = TaskId.MAKE_VORONOI_POINTS;
             t.index = tasks.length - 1;
             t.toolbar = ToolbarPoints;
-            t.layers = [Layer.POINTS, Layer.VORONOI];
+            t.layers = [Layer.POINTS, Layer.VORONOI, Layer.DELAUNAY];
+            t.operations = ["points"];
 
             // Make Tectonic Plates
             tasks.push(t = new Task());
             t.id = TaskId.MAKE_TECTONIC_PLATES;
             t.index = tasks.length - 1;
             t.toolbar = ToolbarTectonicPlates;
-            t.layers = [Layer.POINTS, Layer.VORONOI, Layer.TECTONIC_PLATES];
+            t.layers = [Layer.POINTS, Layer.VORONOI, Layer.DELAUNAY, Layer.TECTONIC_PLATES];
+            t.operations = [];
         }
 
         public static function byId(id:String):Task

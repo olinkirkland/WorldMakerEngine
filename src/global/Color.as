@@ -7,12 +7,13 @@ package global
         public static const grey:uint = 0xcccccc;
         public static const black:uint = 0x000000;
 
-        // Versions
-        public static const garnet:uint = 0x990000;
+        // Nice to have colors
+        public static const pacificBlue:uint = 0x2ab7ca;
+        public static const tartOrange:uint = 0xfe4a49;
+        public static const crayonYellow:uint = 0xfed766;
 
         // Colors for visually important elements
-        public static const themePrimary:uint = 0xffbb33;
-        public static const themeSecondary:uint = 0xfa5f5c;
+        public static const theme:uint = 0xffbb33;
 
         // Darkest to lightest fills
         public static const fillInset:uint = 0x1c2024;

@@ -149,7 +149,7 @@
                           horizontalAlign="right">
                     <s:Label text="Downloading"/>
                     <s:Label id="labelSpeed"
-                             color="{Color.themePrimary}"/>
+                             color="{Color.theme}"/>
                 </s:HGroup>
 
                 <ui:ProgressBar id="progressBarDownload"

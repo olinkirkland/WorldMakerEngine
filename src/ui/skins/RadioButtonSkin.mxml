@@ -89,7 +89,7 @@
                              source="{Icons.RadioOff}"
                              source.selectedStates="{Icons.RadioOn}"
                              color="{Color.textMedium}"
-                             color.selectedStates="{Color.themePrimary}"
+                             color.selectedStates="{Color.theme}"
                              width="100%"
                              height="100%"
                              smooth="true"/>

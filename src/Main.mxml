@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
                xmlns:s="library://ns.adobe.com/flex/spark"
-               xmlns:c="ui.components.*"
                xmlns:g="game.*"
                creationComplete="onCreationComplete(event)"
                width="100%"
@@ -16,13 +15,14 @@
 
         import events.PopupEvent;
 
+        import game.Map;
+
         import global.Color;
         import global.Icons;
         import global.Local;
         import global.Signal;
 
         import managers.PopupManager;
-
         import managers.State;
 
         import mx.events.FlexEvent;
@@ -41,14 +41,7 @@
             // Workaround for stage video
             OSMFSettings.enableStageVideo = false;
 
-            addEventListeners();
-
-            ToolTipManager.showDelay = 0;
-            ToolTipManager.toolTipClass = ToolTip;
-        }
-
-        private function addEventListeners():void
-        {
+            // Popup listeners
             Signal.instance.addEventListener(PopupEvent.OPEN, function (event:PopupEvent):void
             {
                 openPopup(event.popup);
@@ -60,6 +53,9 @@
             });
 
             State.dispatcher.addEventListener(State.STATE_CHANGED, onStateChange);
+
+            ToolTipManager.showDelay = 0;
+            ToolTipManager.toolTipClass = ToolTip;
         }
 
         private function onStateChange(event:Event):void
@@ -105,6 +101,24 @@
 
         private function onClickSave(event:MouseEvent):void
         {
+            var i:int = 0;
+            for (var category:String in Map.instance.invalidatedOperations)
+                i++;
+
+            if (i == 0)
+            {
+                saveAfterApply();
+                return;
+            }
+
+            var p:PopupBusy = new PopupBusy();
+            p.calculation = Map.instance.calculate;
+            p.callbackComplete = saveAfterApply;
+            PopupManager.open(p);
+        }
+
+        private function saveAfterApply():void
+        {
             buttonSave.label = Local.text("save");
             var p:PopupBusy = new PopupBusy();
             p.calculation = State.save;
@@ -146,12 +160,7 @@
                         <s:Label text="Worldmaker"
                                  fontSize="24"
                                  fontFamily="Logo"
-                                 color="{Color.textLow}"/>
-
-                        <c:ColorBitmapImage source="{Icons.Logo}"
-                                            color="{Color.textLow}"
-                                            width="16"
-                                            height="16"/>
+                                 color="{Color.textMedium}"/>
 
                     </s:HGroup>
 

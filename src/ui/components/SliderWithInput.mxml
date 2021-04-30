@@ -26,7 +26,11 @@
         {
             if (input.text.length == 0)
                 input.text = String(0);
-            _value = slider.value = Number(input.text);
+
+            slider.value = Number(input.text);
+            slider.validateNow();
+            _value = slider.value;
+
             dispatchEvent(new Event(Event.CHANGE));
         }
 
@@ -34,6 +38,7 @@
         {
             input.text = formatForInput(slider.value);
             _value = Number(input.text);
+
             dispatchEvent(new Event(Event.CHANGE));
         }
 

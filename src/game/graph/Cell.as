@@ -2,11 +2,6 @@ package game.graph
 {
     import flash.geom.Point;
 
-    import layers.geography.climate.Biome;
-
-    import layers.geography.hydrology.River;
-    import layers.tectonics.TectonicPlate;
-
     public class Cell
     {
         public var index:int;

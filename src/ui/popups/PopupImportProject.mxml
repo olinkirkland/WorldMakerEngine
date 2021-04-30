@@ -124,7 +124,7 @@
             if (!file.isDirectory && (file.type == ".json"))
             {
                 imageDrag.source = Icons.ImportYes;
-                imageDrag.color = Color.themePrimary;
+                imageDrag.color = Color.theme;
 
                 NativeDragManager.acceptDragDrop(groupDrag);
             } else

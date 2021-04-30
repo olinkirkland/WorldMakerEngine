@@ -40,7 +40,7 @@
                 radiusX="5"
                 radiusY="5">
             <s:fill>
-                <s:SolidColor color="{Color.themePrimary}"
+                <s:SolidColor color="{Color.theme}"
                               alpha.normal="1"
                               alpha.disabled=".5"/>
             </s:fill>

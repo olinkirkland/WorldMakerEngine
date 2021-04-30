@@ -104,18 +104,18 @@
             // Get the values from the State
             spacing = State.read("points.spacing");
             if (!spacing)
-                spacing = 5;
+                spacing = 10;
             precision = State.read("points.precision");
             if (!precision)
-                precision = 5;
+                precision = 7;
             amount = State.read("points.amount");
             if (!amount)
-                amount = 2000;
+                amount = 5000;
 
             // Spacing
             sliderSpacing.label.text = Local.text('spacing');
-            sliderSpacing.slider.minimum = 1;
-            sliderSpacing.slider.maximum = 10;
+            sliderSpacing.slider.minimum = 5;
+            sliderSpacing.slider.maximum = 20;
             sliderSpacing.slider.stepSize = 1;
             sliderSpacing.slider.snapInterval = 1;
             sliderSpacing.value = spacing;
@@ -124,7 +124,7 @@
             // Precision
             sliderPrecision.label.text = Local.text('precision');
             sliderPrecision.slider.minimum = 1;
-            sliderPrecision.slider.maximum = 10;
+            sliderPrecision.slider.maximum = 20;
             sliderPrecision.slider.stepSize = 1;
             sliderPrecision.slider.snapInterval = 1;
             sliderPrecision.value = precision;
@@ -132,12 +132,14 @@
 
             // Amount
             sliderAmount.label.text = Local.text('amount');
-            sliderAmount.slider.minimum = 500;
-            sliderAmount.slider.maximum = 10000;
-            sliderAmount.slider.stepSize = 1;
-            sliderAmount.slider.snapInterval = 1;
+            sliderAmount.slider.minimum = 2000;
+            sliderAmount.slider.maximum = 20000;
+            sliderAmount.slider.stepSize = 100;
+            sliderAmount.slider.snapInterval = 100;
             sliderAmount.value = amount;
             sliderAmount.addEventListener(Event.CHANGE, onChange, false, 0, true);
+
+            onChange(null);
         }
 
         private function onSeedChange(event:TextOperationEvent):void

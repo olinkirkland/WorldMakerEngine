@@ -13,8 +13,6 @@
         import game.task.Task;
         import game.task.TaskId;
 
-        import geom.Coord;
-
         import global.Color;
         import global.Icons;
         import global.Local;
@@ -64,20 +62,27 @@
                 validate();
             });
 
-            systemManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+            systemManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMoveAnywhere);
+            canvas.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMoveOverCanvas);
 
             viewStackPanes.addEventListener(Event.CLOSE, onPaneClose);
         }
 
-        private function onMouseMove(event:MouseEvent):void
+        private function onMouseMoveOverCanvas(event:MouseEvent):void
         {
+            if (canvas.dragging)
+                return;
+
             // Get nearest point
-            var nearestPoint:Coord = map.getNearestPoint(new Coord(canvas.layerGroup.mouseX, canvas.layerGroup.mouseY));
+            var nearestPoint:Point = map.getNearestPoint(new Point(canvas.layerGroup.mouseX, canvas.layerGroup.mouseY));
             labelNearestPoint.text = "";
             if (nearestPoint)
                 labelNearestPoint.text = "x=" + nearestPoint.x + ", y=" + nearestPoint.y + "";
-            iconNearestPoint.visible = iconNearestPoint.includeInLayout = nearestPoint;
+            groupNearestPoint.visible = nearestPoint != null;
+        }
 
+        private function onMouseMoveAnywhere(event:MouseEvent):void
+        {
             labelMouse.text = "x=" + canvas.layerGroup.mouseX + ", y=" + canvas.layerGroup.mouseY;
         }
 
@@ -118,7 +123,6 @@
 
         private function validateTask():void
         {
-            // Did the task change?
             if (State.read("task") == undefined)
                 State.write("task", TaskId.READ_INTRODUCTION);
 
@@ -152,10 +156,17 @@
                 toolbar.percentHeight = 100;
                 groupToolbar.addElement(toolbar);
                 scrollerToolbar.visible = false;
+
                 setTimeout(function ():void
                 {
                     scrollerToolbar.visible = true;
-                    TweenLite.fromTo(scrollerToolbar, .5, {alpha: 0}, {alpha: 1});
+                    TweenLite.fromTo(scrollerToolbar, .5, {alpha: 0}, {
+                        alpha: 1, onComplete: function ():void
+                        {
+                            Map.instance.calculateFromTask(taskId);
+                            calculateWithPopup();
+                        }
+                    });
                 }, 500);
             }
 
@@ -170,6 +181,11 @@
 
         private function onApply(event:MouseEvent):void
         {
+            calculateWithPopup();
+        }
+
+        private function calculateWithPopup():void
+        {
             var p:PopupBusy = new PopupBusy();
             p.calculation = Map.instance.calculate;
             p.callbackComplete = validateButtonApply;
@@ -179,7 +195,7 @@
         private function validateButtonApply():void
         {
             var i:int = 0;
-            for (var category:String in Map.instance.invalid)
+            for (var category:String in Map.instance.invalidatedOperations)
                 i++;
             buttonApply.label = Local.text("apply") + (i > 0 ? " *" : "");
         }
@@ -213,6 +229,11 @@
         private function onZoomOut(event:MouseEvent):void
         {
             canvas.zoomOut();
+        }
+
+        private function onCenterMap(event:MouseEvent):void
+        {
+            canvas.centerMap();
         }
         ]]>
     </fx:Script>
@@ -248,66 +269,71 @@
                           height="100%"/>
 
                 <!--Map Controls-->
-                <s:HGroup width="100%">
+                <s:Group width="100%">
+                    <s:Rect width="100%"
+                            height="100%">
+                        <s:fill>
+                            <s:SolidColor color="{Color.black}"
+                                          alpha=".8"/>
+                        </s:fill>
+                    </s:Rect>
+                    <s:HGroup width="100%"
+                              padding="5"
+                              verticalAlign="middle">
+                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                  icon="{Icons.Layers}"
+                                  toolTip="{Local.text('map_layers')}"
+                                  click="onToggleLayers(event)"/>
 
+                        <s:Spacer width="100%"/>
+
+                        <s:Label id="labelMouse"/>
+
+                        <s:Label id="labelZoom"/>
+                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                  icon="{Icons.Minus}"
+                                  toolTip="{Local.text('zoom_out')}"
+                                  click="onZoomOut(event)"/>
+                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                  icon="{Icons.Plus}"
+                                  toolTip="{Local.text('zoom_in')}"
+                                  click="onZoomIn(event)"/>
+                        <s:Button skinClass="ui.skins.ButtonSkinIcon"
+                                  icon="{Icons.Fit}"
+                                  toolTip="{Local.text('center_map')}"
+                                  click="onCenterMap(event)"/>
+
+                    </s:HGroup>
+                </s:Group>
+                <s:HGroup id="groupNearestPoint"
+                          width="100%"
+                          height="100%"
+                          horizontalAlign="center"
+                          verticalAlign="bottom"
+                          bottom="5"
+                          visible="false"
+                          mouseEnabled="false">
                     <s:Group>
                         <s:Rect width="100%"
                                 height="100%"
-                                bottomRightRadiusX="5"
-                                bottomRightRadiusY="5">
+                                radiusX="15"
+                                radiusY="15">
                             <s:fill>
-                                <s:SolidColor color="{Color.fillLow}"/>
+                                <s:SolidColor color="{Color.black}"
+                                              alpha=".8"/>
                             </s:fill>
                         </s:Rect>
-                        <s:HGroup padding="5"
-                                  paddingRight="10"
-                                  verticalAlign="middle"
-                                  minWidth="80">
-                            <c:ColorBitmapImage source="{Icons.Mouse}"
-                                                color="{Color.textLow}"/>
-                            <s:Label id="labelMouse"
-                                     color="{Color.textLow}"/>
+                        <s:HGroup verticalAlign="middle"
+                                  padding="5"
+                                  paddingRight="10">
                             <c:ColorBitmapImage id="iconNearestPoint"
-                                                color="{Color.themePrimary}"
+                                                color="{Color.theme}"
                                                 source="{Icons.Target}"/>
                             <s:Label id="labelNearestPoint"
-                                     color="{Color.themePrimary}"/>
-                        </s:HGroup>
-                    </s:Group>
-
-                    <s:Spacer width="100%"/>
-
-                    <s:Group>
-                        <s:Rect width="100%"
-                                height="100%"
-                                bottomLeftRadiusX="5"
-                                bottomLeftRadiusY="5">
-                            <s:fill>
-                                <s:SolidColor color="{Color.fillLow}"/>
-                            </s:fill>
-                        </s:Rect>
-                        <s:HGroup padding="5"
-                                  paddingLeft="10"
-                                  verticalAlign="middle">
-                            <s:Label id="labelZoom"
-                                     color="{Color.textLow}"/>
-                            <s:Button skinClass="ui.skins.ButtonSkinIcon"
-                                      icon="{Icons.Minus}"
-                                      toolTip="{Local.text('zoom_out')}"
-                                      click="onZoomOut(event)"/>
-                            <s:Button skinClass="ui.skins.ButtonSkinIcon"
-                                      icon="{Icons.Plus}"
-                                      toolTip="{Local.text('zoom_in')}"
-                                      click="onZoomIn(event)"/>
-                            <s:Button skinClass="ui.skins.ButtonSkinIcon"
-                                      icon="{Icons.Layers}"
-                                      toolTip="{Local.text('map_layers')}"
-                                      click="onToggleLayers(event)"/>
+                                     color="{Color.theme}"/>
                         </s:HGroup>
                     </s:Group>
                 </s:HGroup>
-
-
             </s:Group>
 
             <!--Task Actions-->

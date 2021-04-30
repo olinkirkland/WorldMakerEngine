@@ -2,9 +2,17 @@
 
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         creationComplete="onCreationComplete(event)">
+         creationComplete="onCreationComplete(event)"
+         mouseDown="onMouseDown(event)"
+         mouseChildren="false"
+         click="onClick(event)">
 
     <fx:Script><![CDATA[
+        import com.greensock.TweenLite;
+
+        import game.Layer;
+        import game.Map;
+
         import mx.core.UIComponent;
         import mx.events.FlexEvent;
         import mx.events.ResizeEvent;
@@ -13,14 +21,41 @@
 
         private var layers:Object = {};
         private var dragPoint:Point;
-        private var zoomLevels:Array = [.5, .8, .9, 1, 1.1, 1.2, 1.5, 2, 4];
+        private var zoomLevels:Array = [.25, .5, .67, .8, .9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 
+        public var dragging:Boolean = false;
         public var zoomLevel:Number = 1;
 
         private function onLayerGroupContainerResize(event:ResizeEvent):void
         {
             var t:Object = event.target;
             t.height = (t.width / t.contentWidth) * t.contentHeight;
+        }
+
+        private function showBitmapLayers():void
+        {
+            for each (var c:UIComponent in layers)
+            {
+                for (var i:int = 0; i < c.numChildren; i++)
+                    c.getChildAt(i).visible = false;
+
+                var bmp:Bitmap = Bitmap(c.getChildByName("bmp"));
+                if (bmp != null)
+                    bmp.visible = true;
+            }
+        }
+
+        private function hideBitmapLayers():void
+        {
+            for each (var c:UIComponent in layers)
+            {
+                for (var i:int = 0; i < c.numChildren; i++)
+                    c.getChildAt(i).visible = true;
+
+                var bmp:Bitmap = Bitmap(c.getChildByName("bmp"));
+                if (bmp != null)
+                    bmp.visible = false;
+            }
         }
 
         public function zoomIn():void
@@ -31,8 +66,7 @@
             else if (zoomLevelIndex + 1 < zoomLevels.length)
                 zoomLevel = zoomLevels[zoomLevelIndex + 1];
 
-            layerGroup.scaleX = layerGroup.scaleY = zoomLevel;
-            dispatchEvent(new Event(ZOOM_CHANGED));
+            validateZoom();
         }
 
         public function zoomOut():void
@@ -43,8 +77,51 @@
             else if (zoomLevelIndex > 0)
                 zoomLevel = zoomLevels[zoomLevelIndex - 1];
 
-            layerGroup.scaleX = layerGroup.scaleY = zoomLevel;
+            validateZoom();
+        }
+
+        public function centerMap():void
+        {
+            centerMapOnPoint(new Point(layerGroup.width / 2, layerGroup.height / 2));
+        }
+
+        private function validateZoom():void
+        {
+            // Get the viewport's center point
+            var p:Point = new Point(width / 2, height / 2);
+            p = layerGroup.globalToLocal(localToGlobal(p));
+
+            showBitmapLayers();
+            TweenLite.to(layerGroup, .3, {
+                scaleX: zoomLevel, onUpdate: function ():void
+                {
+                    layerGroup.scaleY = layerGroup.scaleX;
+                    centerMapOnPoint(p, false);
+                }, onComplete: hideBitmapLayers
+            });
+
+
             dispatchEvent(new Event(ZOOM_CHANGED));
+        }
+
+        private function centerMapOnPoint(p:Point, animate:Boolean = true):void
+        {
+            var v:Point = new Point(width / 2, height / 2);
+            v = layerGroup.globalToLocal(localToGlobal(v));
+
+            var goal:Point = new Point();
+            goal.x = layerGroup.x + ((v.x - p.x) * layerGroup.scaleX);
+            goal.y = layerGroup.y + ((v.y - p.y) * layerGroup.scaleY);
+
+            if (animate)
+            {
+                TweenLite.to(layerGroup, .6, {x: goal.x, y: goal.y});
+                return;
+            }
+
+            // Don't animate; snap immediately
+            layerGroup.x = goal.x;
+            layerGroup.y = goal.y;
         }
 
         public function getLayer(id:String):UIComponent
@@ -61,11 +138,18 @@
 
         private function onMouseDown(event:MouseEvent):void
         {
+            hideBitmapLayers();
+            dragging = false;
             dragPoint = new Point(event.stageX, event.stageY);
         }
 
         private function onMouseUp(event:MouseEvent):void
         {
+            callLater(function ():void
+            {
+                hideBitmapLayers();
+                dragging = false;
+            });
             dragPoint = null;
         }
 
@@ -73,20 +157,59 @@
         {
             systemManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
             systemManager.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+            systemManager.stage.addEventListener(MouseEvent.MOUSE_WHEEL, onScroll);
+        }
+
+        private function onScroll(event:MouseEvent):void
+        {
+            if (event.delta > 0)
+                zoomIn();
+            if (event.delta < 0)
+                zoomOut();
         }
 
         private function onMouseMove(event:MouseEvent):void
         {
             if (dragPoint)
             {
+                if (!dragging)
+                    showBitmapLayers();
+
                 var newX:Number = systemManager.stage.mouseX - dragPoint.x;
                 var newY:Number = systemManager.stage.mouseY - dragPoint.y;
                 var distance:Point = new Point(newX, newY);
+                dragging = true;
 
                 dragPoint = new Point(systemManager.stage.mouseX, systemManager.stage.mouseY);
                 layerGroup.x += distance.x;
                 layerGroup.y += distance.y;
             }
+        }
+
+        public function validateLayersOrderAndVisibility():void
+        {
+            trace("@Canvas: validateLayersOrderAndVisibility");
+
+            var i:int = 0;
+            for each (var l:Layer in Map.instance.layers)
+            {
+                if (layers.hasOwnProperty(l.id))
+                {
+                    var c:UIComponent = layers[l.id];
+                    c.visible = l.visible;
+                    layerGroup.setElementIndex(c, i++);
+                }
+            }
+
+
+        }
+
+        private function onClick(event:MouseEvent):void
+        {
+            if (dragging)
+                return;
+
+            //centerMapOnPoint(new Point(layerGroup.mouseX, layerGroup.mouseY));
         }
         ]]></fx:Script>
 
@@ -105,8 +228,7 @@
               padding="15"
               includeInLayout="false"
               mask="{layerGroupMask}"
-              resize="onLayerGroupContainerResize(event)"
-              mouseDown="onMouseDown(event)">
+              resize="onLayerGroupContainerResize(event)">
 
         <s:Group id="layerGroup"
                  width="2000"
@@ -117,7 +239,7 @@
     <s:Rect width="100%"
             height="100%">
         <s:fill>
-            <s:SolidColor color="0xff0000"
+            <s:SolidColor color="0x000000"
                           alpha=".2"/>
         </s:fill>
     </s:Rect>

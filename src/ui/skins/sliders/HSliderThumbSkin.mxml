@@ -24,7 +24,7 @@
                x="{icon.x + icon.width/2 - 30/2}"
                y="{icon.y + icon.height/2 - 30/2}">
         <s:fill>
-            <s:SolidColor color="{Color.themeSecondary}"
+            <s:SolidColor color="0xff0000"
                           alpha="0"/>
         </s:fill>
     </s:Ellipse>

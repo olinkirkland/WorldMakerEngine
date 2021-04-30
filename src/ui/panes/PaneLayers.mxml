@@ -108,7 +108,7 @@
                   padding="10">
             <s:Label text="{Local.text('map_layers')}"/>
             <s:Label id="labelLayersCount"
-                     color="{Color.themePrimary}"
+                     color="{Color.theme}"
                      toolTip="{Local.text('layers_count_tooltip')}"/>
             <s:Spacer width="100%"/>
             <s:Button skinClass="ui.skins.ButtonSkinIcon"

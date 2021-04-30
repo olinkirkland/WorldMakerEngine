@@ -155,6 +155,9 @@ package global
         [Embed(source="/assets/icons/minus.png")]
         public static const Minus:Class;
 
+        [Embed(source="/assets/icons/fit.png")]
+        public static const Fit:Class;
+
         [Embed(source="/assets/icons/sort.png")]
         public static const Sort:Class;
 
