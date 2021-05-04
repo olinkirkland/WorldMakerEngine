@@ -10,6 +10,10 @@
         <![CDATA[
         import com.greensock.TweenLite;
 
+        import game.controllers.Tectonics;
+
+        import game.graph.Cell;
+
         import game.task.Task;
         import game.task.TaskId;
 
@@ -27,6 +31,7 @@
         import ui.popups.PopupConfirm;
         import ui.popups.PopupTasks;
         import ui.toolbars.Toolbar;
+        import ui.toolbars.ToolbarTectonicPlates;
 
         private var map:Map;
         private var toolbar:Toolbar;
@@ -64,17 +69,38 @@
 
             systemManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMoveAnywhere);
             canvas.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMoveOverCanvas);
+            canvas.addEventListener(MouseEvent.CLICK, onMouseClickCanvas);
 
             viewStackPanes.addEventListener(Event.CLOSE, onPaneClose);
         }
 
+        private function onMouseClickCanvas(event:MouseEvent):void
+        {
+            var point:Point = Map.instance.getClosestPoint(new Point(canvas.layerGroup.mouseX, canvas.layerGroup.mouseY));
+            if (!point)
+                return;
+
+            var cell:Cell = Map.instance.cellsByPoints[JSON.stringify(point)];
+
+            // The current task determines the action
+            switch (Task.current.id)
+            {
+                case TaskId.MAKE_TECTONIC_PLATES:
+                    cell.plate = ToolbarTectonicPlates(toolbar).getSelectedPlateId();
+                    Artist.drawTectonicPlates();
+                    break;
+                default:
+                    break;
+            }
+        }
+
         private function onMouseMoveOverCanvas(event:MouseEvent):void
         {
-            if (canvas.dragging)
+            if (canvas.isDragging)
                 return;
 
             // Get nearest point
-            var nearestPoint:Point = map.getNearestPoint(new Point(canvas.layerGroup.mouseX, canvas.layerGroup.mouseY));
+            var nearestPoint:Point = map.getClosestPoint(new Point(canvas.layerGroup.mouseX, canvas.layerGroup.mouseY));
             labelNearestPoint.text = "";
             if (nearestPoint)
                 labelNearestPoint.text = "x=" + nearestPoint.x + ", y=" + nearestPoint.y + "";
@@ -163,8 +189,14 @@
                     TweenLite.fromTo(scrollerToolbar, .5, {alpha: 0}, {
                         alpha: 1, onComplete: function ():void
                         {
-                            Map.instance.calculateFromTask(taskId);
-                            calculateWithPopup();
+                            var p:PopupBusy = new PopupBusy();
+                            p.text = Local.text('loading');
+                            p.calculation = function ():void
+                            {
+                                Map.instance.loadPreviousTasks(taskId);
+                            };
+                            p.callbackComplete = calculateWithPopup;
+                            PopupManager.open(p);
                         }
                     });
                 }, 500);
@@ -188,6 +220,7 @@
         {
             var p:PopupBusy = new PopupBusy();
             p.calculation = Map.instance.calculate;
+            p.text = Local.text('calculating');
             p.callbackComplete = validateButtonApply;
             PopupManager.open(p);
         }

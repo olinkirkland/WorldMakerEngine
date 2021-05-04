@@ -25,7 +25,6 @@
         private var precision:Number;
         private var amount:Number;
 
-
         override public function onCreationComplete(event:FlexEvent):void
         {
             super.onCreationComplete(event);

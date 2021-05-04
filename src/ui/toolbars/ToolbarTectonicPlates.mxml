@@ -5,13 +5,65 @@
            xmlns:t="ui.toolbars.*">
 
     <fx:Script><![CDATA[
+        import events.StateEvent;
+
+        import game.Map;
+        import game.controllers.Tectonics;
+        import game.graph.Cell;
+
         import global.Local;
 
+        import managers.State;
+
+        import managers.State;
+
+        import mx.collections.ArrayCollection;
+
         import mx.events.FlexEvent;
+
+        import spark.collections.Sort;
+        import spark.collections.SortField;
 
         override public function onCreationComplete(event:FlexEvent):void
         {
             super.onCreationComplete(event);
+
+            updatePlatesFromState();
+
+            State.dispatcher.addEventListener(State.STATE_CHANGED, onStateChanged);
+        }
+
+        private function onStateChanged(event:StateEvent):void
+        {
+            updatePlatesFromState();
+        }
+
+        private function updatePlatesFromState():void
+        {
+            var u:Object = State.read("plates");
+            if (!u)
+                u = {};
+
+            var plates:ArrayCollection = new ArrayCollection();
+            for each (var plate:Object in u)
+                plates.addItem(plate);
+
+            var sortByValue:Sort = new Sort();
+            sortByValue.fields = [new SortField("id", true)];
+            plates.sort = sortByValue;
+            plates.refresh();
+
+            listPlates.dataProvider = plates;
+        }
+
+        public function getSelectedPlateId():String
+        {
+            return null;
+        }
+
+        private function onAddPlate(event:MouseEvent):void
+        {
+            Tectonics.addPlate();
         }
         ]]>
     </fx:Script>
@@ -19,11 +71,39 @@
     <s:VGroup width="100%"
               height="100%"
               verticalAlign="bottom">
+
         <s:VGroup width="100%"
-                  height="100%">
+                  height="100%"
+                  gap="15">
+
             <s:Label text="{Local.text('task_make_tectonic_plates_text')}"
                      width="100%"/>
+
+            <s:Button id="buttonAddPlate"
+                      label="{Local.text('add_plate')}"
+                      click="onAddPlate(event)"/>
+
+            <s:VGroup width="100%">
+                <s:List id="listPlates"
+                        useVirtualLayout="false"
+                        width="100%"
+                        contentBackgroundAlpha="0"
+                        borderVisible="false"
+                        horizontalScrollPolicy="off"
+                        requireSelection="true"
+                        allowMultipleSelection="false"
+                        itemRenderer="ui.itemRenderers.ItemRendererTectonicPlate">
+                    <s:layout>
+                        <s:TileLayout columnAlign="justifyUsingWidth"
+                                      requestedColumnCount="3"
+                                      horizontalGap="5"
+                                      verticalGap="5"/>
+                    </s:layout>
+                </s:List>
+            </s:VGroup>
+
         </s:VGroup>
+
     </s:VGroup>
 
 </t:Toolbar>

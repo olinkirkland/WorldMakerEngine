@@ -14,6 +14,9 @@ package global
         [Embed(source="/assets/icons/mouse.png")]
         public static const Mouse:Class;
 
+        [Embed(source="/assets/icons/brush.png")]
+        public static const Brush:Class;
+
         [Embed(source="/assets/icons/target.png")]
         public static const Target:Class;
 

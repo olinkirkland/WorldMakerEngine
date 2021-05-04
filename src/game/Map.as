@@ -5,12 +5,6 @@ package game
 
     import events.StateEvent;
 
-    import flash.display.Bitmap;
-
-    import flash.display.BitmapData;
-    import flash.display.Graphics;
-    import flash.display.Sprite;
-    import flash.geom.Matrix;
     import flash.geom.Point;
     import flash.geom.Rectangle;
     import flash.utils.Dictionary;
@@ -19,21 +13,22 @@ package game
     import game.task.Task;
     import game.task.TaskId;
 
-    import global.Color;
-    import global.Draw;
     import global.Rand;
     import global.Util;
 
     import managers.State;
 
     import mx.collections.ArrayCollection;
-    import mx.core.UIComponent;
     import mx.events.CollectionEvent;
 
     import ui.components.Canvas;
 
     public class Map
     {
+        private static var _instance:Map;
+
+        public var canvas:Canvas;
+
         public var layers:ArrayCollection = new ArrayCollection();
         public var layersById:Object = {};
 
@@ -42,20 +37,18 @@ package game
         private var bounds:Rectangle;
 
         // Model
-        private var points:Vector.<Point>;
+        public var points:Vector.<Point>;
         public var cells:Vector.<Cell>;
         public var corners:Vector.<Corner>;
         public var edges:Vector.<Edge>;
 
         // Point Mapping
-        private var cellsByPoints:Object;
-
+        public var cellsByPoints:Object;
         private var quad:QuadTree;
 
-        private static var _instance:Map;
+        // Layers and Operations
         private var defaultLayerOrder:Array = [Layer.POINTS, Layer.VORONOI, Layer.DELAUNAY, Layer.TECTONIC_PLATES];
         private var operations:Array = ["points"];
-        private var canvas:Canvas;
 
         public function Map(canvas:Canvas)
         {
@@ -97,14 +90,31 @@ package game
             layers.addEventListener(CollectionEvent.COLLECTION_CHANGE, onLayersChange);
         }
 
-        public function getNearestPoint(p:Point):Point
+        public function getClosestPoint(p:Point):Point
         {
             if (!quad)
                 return null;
 
-            // Only return a point within a reasonable range
-            var arr:Vector.<Point> = quad.queryFromPoint(p, 5);
-            return (arr.length == 0) ? null : arr[0];
+            // Only return a point within a small radius
+            var arr:Vector.<Point> = quad.queryFromPoint(p, 10);
+            if (arr.length == 0)
+                return null;
+            if (arr.length == 1)
+                return arr[0];
+
+            var closest:Point = arr[0];
+            var distance:Number = Number.POSITIVE_INFINITY;
+            for each (var q:Point in arr)
+            {
+                var d:Number = Point.distance(p, q);
+                if (d < distance)
+                {
+                    closest = q;
+                    distance = d;
+                }
+            }
+
+            return closest;
         }
 
         private function onStateChanged(event:StateEvent):void
@@ -117,11 +127,12 @@ package game
                 canvas.validateLayersOrderAndVisibility();
         }
 
-        public function calculateFromTask(taskId:String):void
+        public function loadPreviousTasks(taskId:String):void
         {
-            // Load data from save file rather than making it for
+            // Load data from save file instead of calculating it for
             // all tasks with a lower index than the current task
-            trace("calculateFromTask: " + taskId);
+
+            trace("loadPreviousTasks: " + taskId);
             var currentTask:Task = Task.byId(taskId);
             for (var i:int = 0; i < currentTask.index; i++)
             {
@@ -150,6 +161,9 @@ package game
 
         private function loadPoints():void
         {
+            if (points != null)
+                return;
+
             bounds = new Rectangle(0,
                     0,
                     2000,
@@ -165,6 +179,8 @@ package game
 
         public function calculate():void
         {
+            trace("@calculate, " + JSON.stringify(invalidatedOperations));
+
             // Loop through all invalidated operations and calculate them
             for (var operation:String in invalidatedOperations)
             {
@@ -183,11 +199,51 @@ package game
             invalidatedOperations = {};
 
             // Draw all layers
-            drawPoints();
-            drawVoronoi();
-            drawDelaunay();
+            Artist.draw();
 
             canvas.validateLayersOrderAndVisibility();
+        }
+
+        public function resetLayers():void
+        {
+            for (var i:int = 0; i < defaultLayerOrder.length; i++)
+            {
+                var id:String = defaultLayerOrder[i];
+                for (var j:int = 0; j < layers.length; j++)
+                {
+                    var l:Layer = layers[j];
+                    if (l.id != id)
+                        continue;
+
+                    l.visible = true;
+                    layers.addItemAt(layers.removeItemAt(j), i);
+                }
+            }
+        }
+
+        private function onLayersChange(event:CollectionEvent):void
+        {
+            var arr:Array = [];
+            for each (var layer:Layer in layers)
+                arr.push({
+                    id: layer.id,
+                    visible: layer.visible
+                });
+
+            State.write("layers", arr);
+        }
+
+        public function validateAllowedLayers():void
+        {
+            for each (var layer:Layer in layers)
+            {
+                var b:Boolean = Task.current.layers.indexOf(layer.id) >= 0;
+                if (layer.allowed != b)
+                {
+                    layer.allowed = b;
+                    layers.itemUpdated(layer);
+                }
+            }
         }
 
         private function makePoints():void
@@ -224,7 +280,7 @@ package game
             State.write("points.points", simplePoints, false);
         }
 
-        private function addPoint(p:Point):void
+        public function addPoint(p:Point):void
         {
             p.x = Util.fixed(p.x, 2);
             p.y = Util.fixed(p.y, 2);
@@ -355,25 +411,6 @@ package game
                 var p:Point = new Point(int(rand.between(0, bounds.width)), int(rand.between(0, bounds.height)));
                 addPoint(p);
             }
-        }
-
-        private function drawPoints():void
-        {
-            var c:UIComponent = canvas.getLayer("points");
-            while (c.numChildren > 0)
-                c.removeChildAt(0);
-            var spr:Sprite = new Sprite();
-            c.addChild(spr);
-            var g:Graphics = spr.graphics;
-
-            for each (var p:Point in points)
-            {
-                g.beginFill(0xffffff);
-                g.drawCircle(p.x, p.y, 2);
-                g.endFill();
-            }
-
-            cacheLayer(c);
         }
 
         private function makeVoronoiGraph():void
@@ -560,97 +597,11 @@ package game
             }
         }
 
-        private function drawVoronoi():void
-        {
-            var c:UIComponent = canvas.getLayer("voronoi");
-            while (c.numChildren > 0)
-                c.removeChildAt(0);
-            var spr:Sprite = new Sprite();
-            c.addChild(spr);
-            var g:Graphics = spr.graphics;
-
-            for each (var cell:Cell in cells)
-                for each (var edge:Edge in cell.edges)
-                    if (edge.v0 && edge.v1)
-                        Draw.drawLine(g, edge.v0.point, edge.v1.point, Color.white);
-
-            cacheLayer(c);
-        }
-
-        private function drawDelaunay():void
-        {
-            var c:UIComponent = canvas.getLayer("delaunay");
-            while (c.numChildren > 0)
-                c.removeChildAt(0);
-            var spr:Sprite = new Sprite();
-            c.addChild(spr);
-            var g:Graphics = spr.graphics;
-
-            for each (var cell:Cell in cells)
-                for each (var edge:Edge in cell.edges)
-                    if (edge.d0 && edge.d1)
-                        Draw.drawLine(g, edge.d0.point, edge.d1.point, Color.pacificBlue);
-
-            cacheLayer(c);
-        }
-
-        private function cacheLayer(c:UIComponent):void
-        {
-            var bmpd:BitmapData = new BitmapData(2000, 1000, true, 0x000000);
-            bmpd.draw(c);
-            var bmp:Bitmap = new Bitmap(bmpd);
-            bmp.name = "bmp";
-
-            c.addChild(bmp);
-        }
-
         public static function get instance():Map
         {
             if (!_instance)
                 new Map(null);
             return _instance;
-        }
-
-        public function resetLayers():void
-        {
-            for (var i:int = 0; i < defaultLayerOrder.length; i++)
-            {
-                var id:String = defaultLayerOrder[i];
-                for (var j:int = 0; j < layers.length; j++)
-                {
-                    var l:Layer = layers[j];
-                    if (l.id != id)
-                        continue;
-
-                    l.visible = true;
-                    layers.addItemAt(layers.removeItemAt(j), i);
-                }
-            }
-        }
-
-        private function onLayersChange(event:CollectionEvent):void
-        {
-            var arr:Array = [];
-            for each (var layer:Layer in layers)
-                arr.push({
-                    id: layer.id,
-                    visible: layer.visible
-                });
-
-            State.write("layers", arr);
-        }
-
-        public function validateAllowedLayers():void
-        {
-            for each (var layer:Layer in layers)
-            {
-                var b:Boolean = Task.current.layers.indexOf(layer.id) >= 0;
-                if (layer.allowed != b)
-                {
-                    layer.allowed = b;
-                    layers.itemUpdated(layer);
-                }
-            }
         }
     }
 }

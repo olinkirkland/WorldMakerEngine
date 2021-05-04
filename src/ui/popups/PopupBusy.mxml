@@ -14,6 +14,7 @@
 
         import mx.events.FlexEvent;
 
+        public var text:String;
         public var callbackComplete:Function = null;
         public var calculation:Function = null;
 
@@ -21,6 +22,8 @@
         {
             super.onCreationComplete(event);
 
+            label.visible = label.includeInLayout = text != null;
+            label.text = text;
             TweenMax.fromTo(groupIcon, 1, {rotation: 0, ease: Linear.easeNone}, {rotation: 360, repeat: -1, ease: Linear.easeNone});
 
             setTimeout(function ():void
@@ -51,5 +54,9 @@
                                 source="{Icons.Hourglass}"
                                 color="{Color.theme}"/>
         </s:Group>
+        <s:VGroup paddingTop="20">
+            <s:Label id="label"
+                     color="{Color.theme}"/>
+        </s:VGroup>
     </s:VGroup>
 </popups:Popup>

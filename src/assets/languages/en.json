@@ -35,5 +35,8 @@
   "please_wait": "Please wait",
   "zoom_in": "Zoom in",
   "zoom_out": "Zoom out",
-  "center_map": "Center Map"
+  "center_map": "Center Map",
+  "calculating": "Calculating",
+  "loading": "Loading",
+  "saving": "Saving"
 }

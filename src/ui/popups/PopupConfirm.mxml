@@ -9,10 +9,10 @@
 
         public var callbackConfirm:Function = null;
         public var callbackCancel:Function = null;
-        public var header:String = "Confirm decision";
-        public var description:String = "Are you sure?";
-        public var textConfirm:String = "Confirm";
-        public var textCancel:String = "Cancel";
+        public var header:String;      // Confirm decision
+        public var description:String; // Are you sure?
+        public var textConfirm:String; // Confirm
+        public var textCancel:String;  // Cancel
 
         override public function onCreationComplete(event:FlexEvent):void
         {

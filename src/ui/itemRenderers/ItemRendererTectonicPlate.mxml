@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                width="100%"
+                autoDrawBackground="false">
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="disabled"/>
+        <s:State name="down"/>
+        <s:State name="over"/>
+        <s:State name="up"/>
+        <s:State name="selected"/>
+    </s:states>
+
+    <fx:Script><![CDATA[
+        import game.controllers.Tectonics;
+
+        import global.Color;
+        import global.Icons;
+        import global.Local;
+
+        import managers.PopupManager;
+
+        import ui.popups.PopupConfirm;
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            if (!value)
+                return;
+
+            labelCount.text = data.cells.length;
+            solidColor.color = Color.stringToLightColor(data.id);
+        }
+
+        private function onClickDelete(event:MouseEvent):void
+        {
+            var p:PopupConfirm = new PopupConfirm();
+            p.callbackConfirm = removePlate;
+            p.header = Local.text('remove_plate');
+            p.description = Local.text('are_you_sure');
+            p.textConfirm = Local.text('yes_im_sure');
+            p.textCancel = Local.text('cancel');
+            PopupManager.open(p);
+        }
+
+        private function removePlate():void
+        {
+            Tectonics.removePlate(data.id);
+        }
+        ]]>
+    </fx:Script>
+
+    <s:Group width="100%">
+
+        <s:Rect width="100%"
+                height="100%">
+            <s:fill>
+                <s:SolidColor color="{Color.fillHigh}"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:Rect width="100%"
+                height="100%">
+            <s:stroke>
+                <s:SolidColorStroke color="{Color.white}"
+                                    alpha="0"
+                                    alpha.selected="1"/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:HGroup width="100%"
+                  padding="5"
+                  verticalAlign="middle">
+
+            <s:Rect width="16"
+                    height="16">
+                <s:fill>
+                    <s:SolidColor id="solidColor"/>
+                </s:fill>
+            </s:Rect>
+
+            <s:Label id="labelCount"
+                     width="100%"/>
+
+            <s:Button id="buttonDelete"
+                      skinClass="ui.skins.ButtonSkinIcon"
+                      icon="{Icons.Delete}"
+                      toolTip="Remove"
+                      click="onClickDelete(event)"/>
+
+        </s:HGroup>
+
+    </s:Group>
+
+</s:ItemRenderer>

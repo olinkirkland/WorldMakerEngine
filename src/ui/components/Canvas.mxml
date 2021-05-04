@@ -3,9 +3,10 @@
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
          creationComplete="onCreationComplete(event)"
-         mouseDown="onMouseDown(event)"
+         middleMouseDown="onMouseDown(event)"
          mouseChildren="false"
-         click="onClick(event)">
+         doubleClickEnabled="true"
+         doubleClick="onDoubleClick(event)">
 
     <fx:Script><![CDATA[
         import com.greensock.TweenLite;
@@ -23,7 +24,9 @@
         private var dragPoint:Point;
         private var zoomLevels:Array = [.25, .5, .67, .8, .9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 
-        public var dragging:Boolean = false;
+        private var keepInBitmapMode:Boolean = false;
+        public var isDragging:Boolean = false;
+
         public var zoomLevel:Number = 1;
 
         private function onLayerGroupContainerResize(event:ResizeEvent):void
@@ -34,6 +37,8 @@
 
         private function showBitmapLayers():void
         {
+            keepInBitmapMode = true;
+
             for each (var c:UIComponent in layers)
             {
                 for (var i:int = 0; i < c.numChildren; i++)
@@ -47,6 +52,9 @@
 
         private function hideBitmapLayers():void
         {
+            if (keepInBitmapMode)
+                return;
+
             for each (var c:UIComponent in layers)
             {
                 for (var i:int = 0; i < c.numChildren; i++)
@@ -97,11 +105,17 @@
                 {
                     layerGroup.scaleY = layerGroup.scaleX;
                     centerMapOnPoint(p, false);
-                }, onComplete: hideBitmapLayers
+                }, onComplete: endZoom
             });
 
 
             dispatchEvent(new Event(ZOOM_CHANGED));
+        }
+
+        private function endZoom():void
+        {
+            keepInBitmapMode = false;
+            setTimeout(hideBitmapLayers, 500);
         }
 
         private function centerMapOnPoint(p:Point, animate:Boolean = true):void
@@ -138,17 +152,18 @@
 
         private function onMouseDown(event:MouseEvent):void
         {
-            hideBitmapLayers();
-            dragging = false;
+            isDragging = false;
             dragPoint = new Point(event.stageX, event.stageY);
         }
 
-        private function onMouseUp(event:MouseEvent):void
+        private function onMouseUp(event:Event):void
         {
             callLater(function ():void
             {
-                hideBitmapLayers();
-                dragging = false;
+                isDragging = false;
+
+                keepInBitmapMode = false;
+                setTimeout(hideBitmapLayers, 500);
             });
             dragPoint = null;
         }
@@ -156,8 +171,9 @@
         private function onCreationComplete(event:FlexEvent):void
         {
             systemManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
-            systemManager.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
-            systemManager.stage.addEventListener(MouseEvent.MOUSE_WHEEL, onScroll);
+            systemManager.stage.addEventListener(MouseEvent.MIDDLE_MOUSE_UP, onMouseUp);
+            systemManager.stage.addEventListener(Event.MOUSE_LEAVE, onMouseUp);
+            addEventListener(MouseEvent.MOUSE_WHEEL, onScroll);
         }
 
         private function onScroll(event:MouseEvent):void
@@ -172,13 +188,13 @@
         {
             if (dragPoint)
             {
-                if (!dragging)
+                if (!isDragging)
                     showBitmapLayers();
 
                 var newX:Number = systemManager.stage.mouseX - dragPoint.x;
                 var newY:Number = systemManager.stage.mouseY - dragPoint.y;
                 var distance:Point = new Point(newX, newY);
-                dragging = true;
+                isDragging = true;
 
                 dragPoint = new Point(systemManager.stage.mouseX, systemManager.stage.mouseY);
                 layerGroup.x += distance.x;
@@ -196,20 +212,15 @@
                 if (layers.hasOwnProperty(l.id))
                 {
                     var c:UIComponent = layers[l.id];
-                    c.visible = l.visible;
+                    c.visible = l.visible && l.allowed;
                     layerGroup.setElementIndex(c, i++);
                 }
             }
-
-
         }
 
-        private function onClick(event:MouseEvent):void
+        private function onDoubleClick(event:MouseEvent):void
         {
-            if (dragging)
-                return;
-
-            //centerMapOnPoint(new Point(layerGroup.mouseX, layerGroup.mouseY));
+            centerMapOnPoint(new Point(layerGroup.mouseX, layerGroup.mouseY));
         }
         ]]></fx:Script>
 

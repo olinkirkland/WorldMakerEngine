@@ -14,6 +14,8 @@ package game.graph
         public var corners:Vector.<Corner>;
         public var area:Number;
 
+        public var plate:String;
+
         public function Cell()
         {
             neighbors = new Vector.<Cell>();

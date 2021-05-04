@@ -56,6 +56,8 @@
 
             ToolTipManager.showDelay = 0;
             ToolTipManager.toolTipClass = ToolTip;
+
+            Map.instance.canvas.centerMap();
         }
 
         private function onStateChange(event:Event):void
@@ -113,6 +115,7 @@
 
             var p:PopupBusy = new PopupBusy();
             p.calculation = Map.instance.calculate;
+            p.text = Local.text('calculating');
             p.callbackComplete = saveAfterApply;
             PopupManager.open(p);
         }
@@ -122,6 +125,7 @@
             buttonSave.label = Local.text("save");
             var p:PopupBusy = new PopupBusy();
             p.calculation = State.save;
+            p.text = Local.text('saving');
             PopupManager.open(p);
         }
 
