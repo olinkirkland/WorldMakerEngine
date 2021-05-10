@@ -19,6 +19,11 @@ package managers
         public static var dispatcher:EventDispatcher = new EventDispatcher();
         public static var loaded:Boolean = false;
 
+        public static function invalidate(id:String):void
+        {
+            dispatcher.dispatchEvent(new StateEvent(STATE_CHANGED, id));
+        }
+
         public static function write(id:String, value:*, check:Boolean = true):*
         {
             if (check)

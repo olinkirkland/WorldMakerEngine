@@ -5,9 +5,15 @@ package game
 
     import events.StateEvent;
 
+    import flash.events.Event;
+
+    import flash.events.EventDispatcher;
+
     import flash.geom.Point;
     import flash.geom.Rectangle;
     import flash.utils.Dictionary;
+
+    import game.controllers.Tectonics;
 
     import game.graph.*;
     import game.task.Task;
@@ -23,7 +29,7 @@ package game
 
     import ui.components.Canvas;
 
-    public class Map
+    public class Map extends EventDispatcher
     {
         private static var _instance:Map;
 
@@ -31,7 +37,7 @@ package game
 
         public var layers:ArrayCollection = new ArrayCollection();
         public var layersById:Object = {};
-
+        public var loaded:Boolean = false;
         public var invalidatedOperations:Object = {};
 
         private var bounds:Rectangle;
@@ -90,6 +96,11 @@ package game
             layers.addEventListener(CollectionEvent.COLLECTION_CHANGE, onLayersChange);
         }
 
+        public function getCellbyPoint(p:Point):Cell
+        {
+            return cellsByPoints[JSON.stringify(p)];
+        }
+
         public function getClosestPoint(p:Point):Point
         {
             if (!quad)
@@ -146,6 +157,7 @@ package game
                         // Load points and make Voronoi graph
                         loadPoints();
                         makeVoronoiGraph();
+                        Tectonics.loadPlates();
                         break;
                     case TaskId.MAKE_TECTONIC_PLATES:
                         break;
@@ -157,6 +169,9 @@ package game
             // Invalidate operations belonging to the current task
             for each (var operation:String in currentTask.operations)
                 invalidatedOperations[operation] = true;
+
+            loaded = true;
+            dispatchEvent(new Event(Event.COMPLETE));
         }
 
         private function loadPoints():void
@@ -514,7 +529,6 @@ package game
             for each (cell in cells)
                 cell.calculateArea();
         }
-
 
         private function setupEdge(edge:Edge):void
         {

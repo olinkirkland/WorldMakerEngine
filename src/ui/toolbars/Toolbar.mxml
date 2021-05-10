@@ -4,12 +4,30 @@
          creationComplete="onCreationComplete(event)">
 
     <fx:Script><![CDATA[
+        import game.Map;
+
         import mx.events.FlexEvent;
 
         public var taskId:String;
 
         public function onCreationComplete(event:FlexEvent):void
         {
+            if (!Map.instance.loaded)
+                Map.instance.addEventListener(Event.COMPLETE, onLoaded);
+            else
+                start();
+        }
+
+        private function onLoaded(event:Event):void
+        {
+            start();
+            Map.instance.removeEventListener(Event.COMPLETE, onLoaded);
+        }
+
+
+        protected function start():void
+        {
+            // Called once Map is loaded
         }
 
         public function dispose():void

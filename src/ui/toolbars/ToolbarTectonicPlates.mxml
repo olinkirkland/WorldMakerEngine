@@ -1,15 +1,22 @@
 <?xml version="1.0"?>
 <t:Toolbar xmlns:fx="http://ns.adobe.com/mxml/2009"
            xmlns:s="library://ns.adobe.com/flex/spark"
+           xmlns:c="ui.components.*"
            creationComplete="onCreationComplete(event)"
            xmlns:t="ui.toolbars.*">
 
     <fx:Script><![CDATA[
         import events.StateEvent;
 
+        import game.Artist;
+
         import game.Map;
         import game.controllers.Tectonics;
+        import game.controllers.Tectonics;
         import game.graph.Cell;
+
+        import global.Color;
+        import global.Icons;
 
         import global.Local;
 
@@ -24,18 +31,31 @@
         import spark.collections.Sort;
         import spark.collections.SortField;
 
-        override public function onCreationComplete(event:FlexEvent):void
+        public var choosingPlateOriginId:String;
+
+        override protected function start():void
         {
-            super.onCreationComplete(event);
+            trace("Start toolbartectonicplates");
 
             updatePlatesFromState();
 
             State.dispatcher.addEventListener(State.STATE_CHANGED, onStateChanged);
+            listPlates.addEventListener(Tectonics.CHOOSE_PLATE, function (event:Event):void
+            {
+                groupChoosing.visible = groupChoosing.enabled = true;
+                choosingPlateOriginId = event.target.data.id
+            });
         }
 
         private function onStateChanged(event:StateEvent):void
         {
             updatePlatesFromState();
+        }
+
+        private function onCancelChoosePlate(event:MouseEvent):void
+        {
+            choosingPlateOriginId = null;
+            groupChoosing.visible = groupChoosing.enabled = false;
         }
 
         private function updatePlatesFromState():void
@@ -54,11 +74,15 @@
             plates.refresh();
 
             listPlates.dataProvider = plates;
+
+            Artist.drawTectonicPlates();
         }
 
-        public function getSelectedPlateId():String
+        public function choosePlate():void
         {
-            return null;
+            groupChoosing.visible = groupChoosing.enabled = false;
+            if (!groupChoosing.visible)
+                choosingPlateOriginId = null;
         }
 
         private function onAddPlate(event:MouseEvent):void
@@ -72,37 +96,64 @@
               height="100%"
               verticalAlign="bottom">
 
-        <s:VGroup width="100%"
-                  height="100%"
-                  gap="15">
+        <s:Group width="100%"
+                 height="100%">
 
-            <s:Label text="{Local.text('task_make_tectonic_plates_text')}"
-                     width="100%"/>
+            <s:VGroup width="100%"
+                      height="100%"
+                      gap="15">
 
-            <s:Button id="buttonAddPlate"
-                      label="{Local.text('add_plate')}"
-                      click="onAddPlate(event)"/>
+                <s:Label text="{Local.text('task_make_tectonic_plates_text')}"
+                         width="100%"/>
 
-            <s:VGroup width="100%">
-                <s:List id="listPlates"
-                        useVirtualLayout="false"
-                        width="100%"
-                        contentBackgroundAlpha="0"
-                        borderVisible="false"
-                        horizontalScrollPolicy="off"
-                        requireSelection="true"
-                        allowMultipleSelection="false"
-                        itemRenderer="ui.itemRenderers.ItemRendererTectonicPlate">
-                    <s:layout>
-                        <s:TileLayout columnAlign="justifyUsingWidth"
-                                      requestedColumnCount="3"
-                                      horizontalGap="5"
-                                      verticalGap="5"/>
-                    </s:layout>
-                </s:List>
+                <s:Button id="buttonAddPlate"
+                          label="{Local.text('add_plate')}"
+                          click="onAddPlate(event)"/>
+
+                <s:VGroup width="100%">
+                    <s:List id="listPlates"
+                            useVirtualLayout="false"
+                            width="100%"
+                            contentBackgroundAlpha="0"
+                            borderVisible="false"
+                            horizontalScrollPolicy="off"
+                            preventSelection="true"
+                            itemRenderer="ui.itemRenderers.ItemRendererTectonicPlate">
+                        <s:layout>
+                            <s:VerticalLayout gap="5"/>
+                        </s:layout>
+                    </s:List>
+                </s:VGroup>
+
             </s:VGroup>
 
-        </s:VGroup>
+            <s:Group id="groupChoosing"
+                     visible="false"
+                     enabled="false"
+                     width="100%"
+                     height="100%">
+                <s:Rect width="100%"
+                        height="100%">
+                    <s:fill>
+                        <s:SolidColor color="{Color.fillHigh}"/>
+                    </s:fill>
+                </s:Rect>
+                <s:VGroup width="100%"
+                          height="100%"
+                          horizontalAlign="center"
+                          verticalAlign="middle"
+                          gap="10">
+                    <c:ColorBitmapImage source="{Icons.Target}"
+                                        color="{Color.textMedium}"/>
+                    <s:Label width="100%"
+                             textAlign="center"
+                             text="{Local.text('choosing_plate_origin')}"/>
+                    <s:Button label="{Local.text('cancel')}"
+                              click="onCancelChoosePlate(event)"/>
+                </s:VGroup>
+            </s:Group>
+
+        </s:Group>
 
     </s:VGroup>
 

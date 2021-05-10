@@ -36,6 +36,8 @@
         private var map:Map;
         private var toolbar:Toolbar;
 
+        private var isDragging:Boolean = false;
+
         private function onCreationComplete(event:FlexEvent):void
         {
             if (!State.loaded)
@@ -70,24 +72,47 @@
             systemManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMoveAnywhere);
             canvas.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMoveOverCanvas);
             canvas.addEventListener(MouseEvent.CLICK, onMouseClickCanvas);
+            canvas.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDownCanvas);
+            canvas.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMoveCanvas);
+            canvas.addEventListener(MouseEvent.MOUSE_UP, onMouseUpCanvas);
 
             viewStackPanes.addEventListener(Event.CLOSE, onPaneClose);
         }
 
+        private function onMouseDownCanvas(event:MouseEvent):void
+        {
+            isDragging = true;
+        }
+
+        private function onMouseMoveCanvas(event:MouseEvent):void
+        {
+            if (!isDragging)
+                return;
+        }
+
+        private function onMouseUpCanvas(event:MouseEvent):void
+        {
+            isDragging = false;
+        }
+
         private function onMouseClickCanvas(event:MouseEvent):void
         {
-            var point:Point = Map.instance.getClosestPoint(new Point(canvas.layerGroup.mouseX, canvas.layerGroup.mouseY));
+            var point:Point = Map.instance.getClosestPoint(new Point(canvas.mapLayerGroup.mouseX, canvas.mapLayerGroup.mouseY));
             if (!point)
                 return;
 
-            var cell:Cell = Map.instance.cellsByPoints[JSON.stringify(point)];
+            var cell:Cell = Map.instance.getCellbyPoint(point);
 
             // The current task determines the action
             switch (Task.current.id)
             {
                 case TaskId.MAKE_TECTONIC_PLATES:
-                    cell.plate = ToolbarTectonicPlates(toolbar).getSelectedPlateId();
-                    Artist.drawTectonicPlates();
+                    if (ToolbarTectonicPlates(toolbar).choosingPlateOriginId)
+                    {
+                        Tectonics.setPlateOrigin(cell, ToolbarTectonicPlates(toolbar).choosingPlateOriginId);
+                        ToolbarTectonicPlates(toolbar).choosePlate();
+                        Artist.drawTectonicPlates();
+                    }
                     break;
                 default:
                     break;
@@ -100,7 +125,7 @@
                 return;
 
             // Get nearest point
-            var nearestPoint:Point = map.getClosestPoint(new Point(canvas.layerGroup.mouseX, canvas.layerGroup.mouseY));
+            var nearestPoint:Point = map.getClosestPoint(new Point(canvas.mapLayerGroup.mouseX, canvas.mapLayerGroup.mouseY));
             labelNearestPoint.text = "";
             if (nearestPoint)
                 labelNearestPoint.text = "x=" + nearestPoint.x + ", y=" + nearestPoint.y + "";
@@ -109,7 +134,12 @@
 
         private function onMouseMoveAnywhere(event:MouseEvent):void
         {
-            labelMouse.text = "x=" + canvas.layerGroup.mouseX + ", y=" + canvas.layerGroup.mouseY;
+            labelMouse.text = "x=" + canvas.mapLayerGroup.mouseX + ", y=" + canvas.mapLayerGroup.mouseY;
+
+            // Only hide nearest point
+            var nearestPoint:Point = map.getClosestPoint(new Point(canvas.mapLayerGroup.mouseX, canvas.mapLayerGroup.mouseY));
+            if (!nearestPoint)
+                groupNearestPoint.visible = false;
         }
 
         private function onPaneClose(event:Event):void

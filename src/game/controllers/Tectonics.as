@@ -1,13 +1,29 @@
 package game.controllers
 {
+    import game.Map;
     import game.graph.Cell;
+
+    import global.Color;
+    import global.Rand;
 
     import managers.State;
 
     public class Tectonics
     {
+        public static const CHOOSE_PLATE:String = "choosePlate";
+
         public function Tectonics()
         {
+        }
+
+        public static function loadPlates():void
+        {
+            var plates:Object = State.read("plates");
+            var cells:Vector.<Cell> = Map.instance.cells;
+
+            for each (var plate:Object in plates)
+                for each (var i:int in plate.cells)
+                    cells[i].plate = plate.id;
         }
 
         public static function getPlate(id:String):Object
@@ -24,6 +40,7 @@ package game.controllers
                 return;
 
             delete plates[id];
+
             State.write("plates", plates, false);
         }
 
@@ -38,11 +55,22 @@ package game.controllers
                 if (Number(id) > nextId)
                     nextId = Number(id);
 
-            var plate:Object = {id: nextId + 1, cells: []};
+            var plate:Object = {id: nextId + 1, cells: [], color: Color.stringToLightColor("foo" + Math.random() * 999)};
             plates[plate.id] = plate;
 
             State.write("plates", plates, false);
             return plate;
+        }
+
+        public static function setPlateOrigin(cell:Cell, id:String):void
+        {
+            var plate:Object = getPlate(id);
+            if (!plate)
+                return;
+
+            plate.origin = cell.index;
+
+            State.invalidate("plates");
         }
 
         public static function addCellToPlate(cell:Cell, id:String):void
@@ -51,11 +79,13 @@ package game.controllers
             if (!plate)
                 return;
 
-            if (!cell.plate)
+            if (cell.plate)
                 removeCellFromPlate(cell, cell.plate);
 
             plate.cells.push(cell.index);
             cell.plate = id;
+
+            State.invalidate("plates");
         }
 
         public static function removeCellFromPlate(cell:Cell, id:String):void
@@ -67,6 +97,8 @@ package game.controllers
                 return;
 
             plate.cells.removeAt(plate.cells.indexOf(cell));
+
+            State.invalidate("plates");
         }
     }
 }

@@ -9,12 +9,16 @@ package game
     import game.graph.*;
 
     import global.Color;
-
-    import global.Color;
-
     import global.Draw;
+    import global.Icons;
+
+    import managers.State;
 
     import mx.core.UIComponent;
+
+    import spark.components.Group;
+
+    import ui.components.ColorBitmapImage;
 
     public class Artist
     {
@@ -50,7 +54,7 @@ package game
 
         public static function drawPoints():void
         {
-            var c:UIComponent = Map.instance.canvas.getLayer(Layer.POINTS);
+            var c:UIComponent = Map.instance.canvas.getMapLayer(Layer.POINTS);
             while (c.numChildren > 0)
                 c.removeChildAt(0);
             var spr:Sprite = new Sprite();
@@ -69,7 +73,7 @@ package game
 
         public static function drawVoronoi():void
         {
-            var c:UIComponent = Map.instance.canvas.getLayer(Layer.VORONOI);
+            var c:UIComponent = Map.instance.canvas.getMapLayer(Layer.VORONOI);
             while (c.numChildren > 0)
                 c.removeChildAt(0);
             var spr:Sprite = new Sprite();
@@ -86,7 +90,7 @@ package game
 
         public static function drawDelaunay():void
         {
-            var c:UIComponent = Map.instance.canvas.getLayer(Layer.DELAUNAY);
+            var c:UIComponent = Map.instance.canvas.getMapLayer(Layer.DELAUNAY);
             while (c.numChildren > 0)
                 c.removeChildAt(0);
             var spr:Sprite = new Sprite();
@@ -103,15 +107,43 @@ package game
 
         public static function drawTectonicPlates():void
         {
-            var c:UIComponent = Map.instance.canvas.getLayer(Layer.TECTONIC_PLATES);
+            var c:UIComponent = Map.instance.canvas.getMapLayer(Layer.TECTONIC_PLATES);
             while (c.numChildren > 0)
                 c.removeChildAt(0);
             var spr:Sprite = new Sprite();
             c.addChild(spr);
             var g:Graphics = spr.graphics;
 
-            for each (var cell:Cell in Map.instance.cells)
-                Draw.fillCell(g, cell, Color.stringToColor(String(cell.plate)));
+            // UI
+            var r:Group = Map.instance.canvas.anchoredUIGroup;
+            r.removeAllElements();
+
+            // Plates
+            var plates:Object = State.read("plates");
+            for each (var plate:Object in plates)
+            {
+                if (!plate.origin)
+                    continue;
+                var p:Point = Map.instance.points[plate.origin];
+                Draw.fillCell(g, Map.instance.getCellbyPoint(p), plate.color);
+
+                // UI
+                var icon:ColorBitmapImage = new ColorBitmapImage();
+                icon.color = Color.white;
+                icon.source = Icons.Marker;
+                icon.x = -icon.width / 2;
+                icon.y = -icon.height;
+
+                var element:AnchoredMapElement = new AnchoredMapElement();
+                element.anchor = p;
+                element.addElement(icon);
+                r.addElement(element);
+            }
+
+            Map.instance.canvas.validateAnchoredUI(true);
+
+//            for each (var cell:Cell in Map.instance.cells)
+//                Draw.fillCell(g, cell, Color.stringToLightColor(String(cell.plate)));
 
             cacheLayer(c);
         }

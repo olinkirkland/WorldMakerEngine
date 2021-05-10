@@ -8,11 +8,6 @@
         import global.Local;
 
         import mx.events.FlexEvent;
-
-        override public function onCreationComplete(event:FlexEvent):void
-        {
-            super.onCreationComplete(event);
-        }
         ]]>
     </fx:Script>
 

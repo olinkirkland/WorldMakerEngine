@@ -4,16 +4,8 @@
                 width="100%"
                 autoDrawBackground="false">
 
-    <s:states>
-        <s:State name="normal"/>
-        <s:State name="disabled"/>
-        <s:State name="down"/>
-        <s:State name="over"/>
-        <s:State name="up"/>
-        <s:State name="selected"/>
-    </s:states>
-
     <fx:Script><![CDATA[
+        import game.Map;
         import game.controllers.Tectonics;
 
         import global.Color;
@@ -31,7 +23,15 @@
                 return;
 
             labelCount.text = data.cells.length;
-            solidColor.color = Color.stringToLightColor(data.id);
+            solidColor.color = data.color;
+            if (!data.origin)
+            {
+                buttonOriginPoint.label = Local.text('set_origin');
+            } else
+            {
+                var p:Point = Map.instance.points[data.origin];
+                buttonOriginPoint.label = p.x + ", " + p.y;
+            }
         }
 
         private function onClickDelete(event:MouseEvent):void
@@ -49,48 +49,55 @@
         {
             Tectonics.removePlate(data.id);
         }
+
+        private function onClickOriginPoint(event:MouseEvent):void
+        {
+            dispatchEvent(new Event(Tectonics.CHOOSE_PLATE, true, false));
+        }
         ]]>
     </fx:Script>
 
     <s:Group width="100%">
 
         <s:Rect width="100%"
-                height="100%">
+                height="100%"
+                radiusX="5"
+                radiusY="5">
             <s:fill>
-                <s:SolidColor color="{Color.fillHigh}"/>
+                <s:SolidColor color="{Color.fillMedium}"/>
             </s:fill>
         </s:Rect>
 
-        <s:Rect width="100%"
-                height="100%">
-            <s:stroke>
-                <s:SolidColorStroke color="{Color.white}"
-                                    alpha="0"
-                                    alpha.selected="1"/>
-            </s:stroke>
-        </s:Rect>
+        <s:VGroup width="100%"
+                  padding="0">
 
-        <s:HGroup width="100%"
-                  padding="5"
-                  verticalAlign="middle">
-
-            <s:Rect width="16"
-                    height="16">
+            <s:Rect width="100%"
+                    height="8">
                 <s:fill>
                     <s:SolidColor id="solidColor"/>
                 </s:fill>
             </s:Rect>
 
-            <s:Label id="labelCount"
-                     width="100%"/>
+            <s:HGroup width="100%"
+                      padding="5"
+                      verticalAlign="middle">
 
-            <s:Button id="buttonDelete"
-                      skinClass="ui.skins.ButtonSkinIcon"
-                      icon="{Icons.Delete}"
-                      toolTip="Remove"
-                      click="onClickDelete(event)"/>
+                <s:Button id="buttonOriginPoint"
+                          icon="{Icons.Target}"
+                          click="onClickOriginPoint(event)"/>
 
-        </s:HGroup>
+                <s:Label id="labelCount"
+                         width="100%"/>
+
+                <s:Button id="buttonDelete"
+                          skinClass="ui.skins.ButtonSkinIcon"
+                          icon="{Icons.Delete}"
+                          toolTip="Remove"
+                          click="onClickDelete(event)"/>
+
+            </s:HGroup>
+
+        </s:VGroup>
 
     </s:Group>
 

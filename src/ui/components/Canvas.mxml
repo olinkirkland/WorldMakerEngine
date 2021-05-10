@@ -11,6 +11,7 @@
     <fx:Script><![CDATA[
         import com.greensock.TweenLite;
 
+        import game.AnchoredMapElement;
         import game.Layer;
         import game.Map;
 
@@ -20,7 +21,7 @@
 
         public static const ZOOM_CHANGED:String = "zoomChanged";
 
-        private var layers:Object = {};
+        private var mapLayers:Object = {};
         private var dragPoint:Point;
         private var zoomLevels:Array = [.25, .5, .67, .8, .9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 
@@ -39,7 +40,7 @@
         {
             keepInBitmapMode = true;
 
-            for each (var c:UIComponent in layers)
+            for each (var c:UIComponent in mapLayers)
             {
                 for (var i:int = 0; i < c.numChildren; i++)
                     c.getChildAt(i).visible = false;
@@ -55,7 +56,7 @@
             if (keepInBitmapMode)
                 return;
 
-            for each (var c:UIComponent in layers)
+            for each (var c:UIComponent in mapLayers)
             {
                 for (var i:int = 0; i < c.numChildren; i++)
                     c.getChildAt(i).visible = true;
@@ -90,24 +91,26 @@
 
         public function centerMap():void
         {
-            centerMapOnPoint(new Point(layerGroup.width / 2, layerGroup.height / 2));
+            centerMapOnPoint(new Point(mapLayerGroup.width / 2, mapLayerGroup.height / 2));
         }
 
         private function validateZoom():void
         {
             // Get the viewport's center point
             var p:Point = new Point(width / 2, height / 2);
-            p = layerGroup.globalToLocal(localToGlobal(p));
+            p = mapLayerGroup.globalToLocal(localToGlobal(p));
 
             showBitmapLayers();
-            TweenLite.to(layerGroup, .3, {
+            TweenLite.to(mapLayerGroup, .3, {
                 scaleX: zoomLevel, onUpdate: function ():void
                 {
-                    layerGroup.scaleY = layerGroup.scaleX;
+                    mapLayerGroup.scaleY = mapLayerGroup.scaleX;
                     centerMapOnPoint(p, false);
+                    validateAnchoredUI(true);
                 }, onComplete: endZoom
             });
 
+            validateAnchoredUI(true);
 
             dispatchEvent(new Event(ZOOM_CHANGED));
         }
@@ -121,33 +124,53 @@
         private function centerMapOnPoint(p:Point, animate:Boolean = true):void
         {
             var v:Point = new Point(width / 2, height / 2);
-            v = layerGroup.globalToLocal(localToGlobal(v));
+            v = mapLayerGroup.globalToLocal(localToGlobal(v));
 
             var goal:Point = new Point();
-            goal.x = layerGroup.x + ((v.x - p.x) * layerGroup.scaleX);
-            goal.y = layerGroup.y + ((v.y - p.y) * layerGroup.scaleY);
+            goal.x = mapLayerGroup.x + ((v.x - p.x) * mapLayerGroup.scaleX);
+            goal.y = mapLayerGroup.y + ((v.y - p.y) * mapLayerGroup.scaleY);
 
             if (animate)
             {
-                TweenLite.to(layerGroup, .6, {x: goal.x, y: goal.y});
+                TweenLite.to(mapLayerGroup, .6, {x: goal.x, y: goal.y, onComplete: validateAnchoredUI});
                 return;
             }
 
             // Don't animate; snap immediately
-            layerGroup.x = goal.x;
-            layerGroup.y = goal.y;
+            mapLayerGroup.x = goal.x;
+            mapLayerGroup.y = goal.y;
+
+            validateAnchoredUI();
         }
 
-        public function getLayer(id:String):UIComponent
+        public function validateAnchoredUI(zoom:Boolean = false):void
         {
-            if (!layers.hasOwnProperty(id))
+            anchoredUIGroup.x = mapLayerGroup.x;
+            anchoredUIGroup.y = mapLayerGroup.y;
+
+            if (!zoom)
+                return;
+
+            // Adjust the location of each AnchoredMapElement
+            for (var i:int = 0; i < anchoredUIGroup.numElements; i++)
             {
-                var c:UIComponent = layers[id] = new UIComponent();
+                var element:AnchoredMapElement = AnchoredMapElement(anchoredUIGroup.getElementAt(i));
+                var p:Point = element.anchor;
+                element.x = p.x * mapLayerGroup.scaleX;
+                element.y = p.y * mapLayerGroup.scaleY;
+            }
+        }
+
+        public function getMapLayer(id:String):UIComponent
+        {
+            if (!mapLayers.hasOwnProperty(id))
+            {
+                var c:UIComponent = mapLayers[id] = new UIComponent();
                 c.cacheAsBitmap = true;
-                layerGroup.addElement(c);
+                mapLayerGroup.addElement(c);
             }
 
-            return layers[id];
+            return mapLayers[id];
         }
 
         private function onMouseDown(event:MouseEvent):void
@@ -197,8 +220,10 @@
                 isDragging = true;
 
                 dragPoint = new Point(systemManager.stage.mouseX, systemManager.stage.mouseY);
-                layerGroup.x += distance.x;
-                layerGroup.y += distance.y;
+                mapLayerGroup.x += distance.x;
+                mapLayerGroup.y += distance.y;
+
+                validateAnchoredUI();
             }
         }
 
@@ -209,18 +234,18 @@
             var i:int = 0;
             for each (var l:Layer in Map.instance.layers)
             {
-                if (layers.hasOwnProperty(l.id))
+                if (mapLayers.hasOwnProperty(l.id))
                 {
-                    var c:UIComponent = layers[l.id];
+                    var c:UIComponent = mapLayers[l.id];
                     c.visible = l.visible && l.allowed;
-                    layerGroup.setElementIndex(c, i++);
+                    mapLayerGroup.setElementIndex(c, i++);
                 }
             }
         }
 
         private function onDoubleClick(event:MouseEvent):void
         {
-            centerMapOnPoint(new Point(layerGroup.mouseX, layerGroup.mouseY));
+            centerMapOnPoint(new Point(mapLayerGroup.mouseX, mapLayerGroup.mouseY));
         }
         ]]></fx:Script>
 
@@ -241,9 +266,17 @@
               mask="{layerGroupMask}"
               resize="onLayerGroupContainerResize(event)">
 
-        <s:Group id="layerGroup"
-                 width="2000"
-                 height="1000"/>
+        <s:Group>
+
+            <s:Group id="mapLayerGroup"
+                     width="2000"
+                     height="1000"/>
+
+            <s:Group id="anchoredUIGroup"
+                     width="2000"
+                     height="1000"/>
+
+        </s:Group>
 
     </s:VGroup>
 

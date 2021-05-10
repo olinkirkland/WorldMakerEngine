@@ -25,10 +25,8 @@
         private var precision:Number;
         private var amount:Number;
 
-        override public function onCreationComplete(event:FlexEvent):void
+        override protected function start():void
         {
-            super.onCreationComplete(event);
-
             type = State.read("points.type");
             if (!type)
                 type = PointsMaker.TYPE_POISSON_DISC;
