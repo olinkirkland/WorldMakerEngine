@@ -132,7 +132,7 @@
 
             if (animate)
             {
-                TweenLite.to(mapLayerGroup, .6, {x: goal.x, y: goal.y, onComplete: validateAnchoredUI});
+                TweenLite.to(mapLayerGroup, .6, {x: goal.x, y: goal.y, onUpdate: validateAnchoredUI, onComplete: validateAnchoredUI});
                 return;
             }
 
