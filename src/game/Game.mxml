@@ -29,6 +29,7 @@
 
         import ui.popups.PopupBusy;
         import ui.popups.PopupConfirm;
+        import ui.popups.PopupInfo;
         import ui.popups.PopupTasks;
         import ui.toolbars.Toolbar;
         import ui.toolbars.ToolbarTectonicPlates;
@@ -109,8 +110,21 @@
                 case TaskId.MAKE_TECTONIC_PLATES:
                     if (ToolbarTectonicPlates(toolbar).choosingPlateOriginId)
                     {
+                        // Does this cell already have a plate origin assigned to it?
+                        if (Tectonics.plateByOrigin(cell))
+                        {
+                            var p:PopupInfo = new PopupInfo();
+                            p.header = Local.text('invalid_cell');
+                            p.description = Local.text('plate_choose_new_origin');
+                            PopupManager.open(p);
+
+                            ToolbarTectonicPlates(toolbar).cancelChoosePlate();
+                            break;
+                        }
+
+                        // Otherwise
                         Tectonics.setPlateOrigin(cell, ToolbarTectonicPlates(toolbar).choosingPlateOriginId);
-                        ToolbarTectonicPlates(toolbar).choosePlate();
+                        ToolbarTectonicPlates(toolbar).confirmPlateOrigin();
                         Artist.drawTectonicPlates();
                     }
                     break;
@@ -383,7 +397,7 @@
                                 radiusY="15">
                             <s:fill>
                                 <s:SolidColor color="{Color.black}"
-                                              alpha=".8"/>
+                                              alpha=".7"/>
                             </s:fill>
                         </s:Rect>
                         <s:HGroup verticalAlign="middle"

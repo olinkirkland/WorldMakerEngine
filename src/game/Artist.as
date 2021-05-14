@@ -7,10 +7,11 @@ package game
     import flash.geom.Point;
 
     import game.graph.*;
+    import game.task.Task;
+    import game.task.TaskId;
 
     import global.Color;
     import global.Draw;
-    import global.Icons;
 
     import managers.State;
 
@@ -18,7 +19,7 @@ package game
 
     import spark.components.Group;
 
-    import ui.components.ColorBitmapImage;
+    import ui.components.PlateTip;
 
     public class Artist
     {
@@ -114,9 +115,30 @@ package game
             c.addChild(spr);
             var g:Graphics = spr.graphics;
 
+            // Draw plates
+
+            cacheLayer(c);
+        }
+
+        public static function drawUI():void
+        {
             // UI
             var r:Group = Map.instance.canvas.anchoredUIGroup;
             r.removeAllElements();
+
+            switch (Task.current.id)
+            {
+                case TaskId.MAKE_TECTONIC_PLATES:
+                    drawAnchoredUITectonicPlates();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private static function drawAnchoredUITectonicPlates():void
+        {
+            var r:Group = Map.instance.canvas.anchoredUIGroup;
 
             // Plates
             var plates:Object = State.read("plates");
@@ -125,27 +147,18 @@ package game
                 if (!plate.origin)
                     continue;
                 var p:Point = Map.instance.points[plate.origin];
-                Draw.fillCell(g, Map.instance.getCellbyPoint(p), plate.color);
 
                 // UI
-                var icon:ColorBitmapImage = new ColorBitmapImage();
-                icon.color = Color.white;
-                icon.source = Icons.Marker;
-                icon.x = -icon.width / 2;
-                icon.y = -icon.height;
+                var plateTip:PlateTip = new PlateTip();
+                plateTip.plate = plate;
 
                 var element:AnchoredMapElement = new AnchoredMapElement();
                 element.anchor = p;
-                element.addElement(icon);
+                element.addElement(plateTip);
                 r.addElement(element);
             }
 
             Map.instance.canvas.validateAnchoredUI(true);
-
-//            for each (var cell:Cell in Map.instance.cells)
-//                Draw.fillCell(g, cell, Color.stringToLightColor(String(cell.plate)));
-
-            cacheLayer(c);
         }
 
         private static function cacheLayer(c:UIComponent):void

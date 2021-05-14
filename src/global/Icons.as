@@ -147,6 +147,9 @@ package global
         [Embed(source="/assets/icons/edit.png")]
         public static const Edit:Class;
 
+        [Embed(source="/assets/icons/tipDown.png")]
+        public static const TipDown:Class;
+
         [Embed(source="/assets/icons/search.png")]
         public static const Search:Class;
 

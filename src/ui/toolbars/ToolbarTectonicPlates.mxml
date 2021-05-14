@@ -9,24 +9,15 @@
         import events.StateEvent;
 
         import game.Artist;
-
-        import game.Map;
         import game.controllers.Tectonics;
-        import game.controllers.Tectonics;
-        import game.graph.Cell;
 
         import global.Color;
         import global.Icons;
-
         import global.Local;
 
         import managers.State;
 
-        import managers.State;
-
         import mx.collections.ArrayCollection;
-
-        import mx.events.FlexEvent;
 
         import spark.collections.Sort;
         import spark.collections.SortField;
@@ -42,8 +33,7 @@
             State.dispatcher.addEventListener(State.STATE_CHANGED, onStateChanged);
             listPlates.addEventListener(Tectonics.CHOOSE_PLATE, function (event:Event):void
             {
-                groupChoosing.visible = groupChoosing.enabled = true;
-                choosingPlateOriginId = event.target.data.id
+                startChoosingPlateOrigin(event.target.data);
             });
         }
 
@@ -54,8 +44,14 @@
 
         private function onCancelChoosePlate(event:MouseEvent):void
         {
+            cancelChoosePlate();
+        }
+
+        public function cancelChoosePlate():void
+        {
             choosingPlateOriginId = null;
             groupChoosing.visible = groupChoosing.enabled = false;
+
         }
 
         private function updatePlatesFromState():void
@@ -76,9 +72,10 @@
             listPlates.dataProvider = plates;
 
             Artist.drawTectonicPlates();
+            Artist.drawUI();
         }
 
-        public function choosePlate():void
+        public function confirmPlateOrigin():void
         {
             groupChoosing.visible = groupChoosing.enabled = false;
             if (!groupChoosing.visible)
@@ -87,7 +84,16 @@
 
         private function onAddPlate(event:MouseEvent):void
         {
-            Tectonics.addPlate();
+            var plate:Object = Tectonics.addPlate();
+            startChoosingPlateOrigin(plate);
+        }
+
+        public function startChoosingPlateOrigin(plate:Object):void
+        {
+            groupChoosing.visible = groupChoosing.enabled = true;
+            choosingPlateOriginId = plate.id;
+
+            imageChoose.color = plate.color;
         }
         ]]>
     </fx:Script>
@@ -101,7 +107,8 @@
 
             <s:VGroup width="100%"
                       height="100%"
-                      gap="15">
+                      gap="15"
+                      includeInLayout="{!groupChoosing.visible}">
 
                 <s:Label text="{Local.text('task_make_tectonic_plates_text')}"
                          width="100%"/>
@@ -135,7 +142,7 @@
                 <s:Rect width="100%"
                         height="100%">
                     <s:fill>
-                        <s:SolidColor color="{Color.fillHigh}"/>
+                        <s:SolidColor color="{Color.fillMedium}"/>
                     </s:fill>
                 </s:Rect>
                 <s:VGroup width="100%"
@@ -143,8 +150,10 @@
                           horizontalAlign="center"
                           verticalAlign="middle"
                           gap="10">
-                    <c:ColorBitmapImage source="{Icons.Target}"
-                                        color="{Color.textMedium}"/>
+                    <c:ColorBitmapImage id="imageChoose"
+                                        width="24"
+                                        height="24"
+                                        source="{Icons.Marker}"/>
                     <s:Label width="100%"
                              textAlign="center"
                              text="{Local.text('choosing_plate_origin')}"/>

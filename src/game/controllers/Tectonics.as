@@ -4,9 +4,10 @@ package game.controllers
     import game.graph.Cell;
 
     import global.Color;
-    import global.Rand;
 
     import managers.State;
+
+    import mx.collections.ArrayCollection;
 
     public class Tectonics
     {
@@ -55,7 +56,12 @@ package game.controllers
                 if (Number(id) > nextId)
                     nextId = Number(id);
 
-            var plate:Object = {id: nextId + 1, cells: [], color: Color.stringToLightColor("foo" + Math.random() * 999)};
+            var plate:Object = {
+                id: nextId + 1,
+                cells: [],
+                color: Color.stringToLightColor("foo" + Math.random() * 999),
+                strength: 3
+            };
             plates[plate.id] = plate;
 
             State.write("plates", plates, false);
@@ -99,6 +105,30 @@ package game.controllers
             plate.cells.removeAt(plate.cells.indexOf(cell));
 
             State.invalidate("plates");
+        }
+
+        public static function calculate():void
+        {
+            var plates:Object = State.read("plates");
+            var arr:Array = [];
+            for each (var plate:Object in plates)
+                arr.push(plate);
+
+            for each (plate in arr)
+                trace(plate.id);
+            trace("######");
+            arr = arr.sortOn("id");
+            for each (plate in arr)
+                trace(plate.id);
+        }
+
+        public static function plateByOrigin(cell:Cell):Object
+        {
+            var plates:Object = State.read("plates");
+            for each (var plate:Object in plates)
+                if (plate.origin == cell.index)
+                    return plate;
+            return null;
         }
     }
 }

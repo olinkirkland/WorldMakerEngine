@@ -51,7 +51,7 @@
         private function clear():void
         {
             textDisplay.text = "";
-            dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE, true));
+            //dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE, true));
             onTextChange(null);
         }
         ]]>

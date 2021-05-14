@@ -54,7 +54,7 @@ package game
 
         // Layers and Operations
         private var defaultLayerOrder:Array = [Layer.POINTS, Layer.VORONOI, Layer.DELAUNAY, Layer.TECTONIC_PLATES];
-        private var operations:Array = ["points"];
+        private var operations:Array = ["points", "plates"];
 
         public function Map(canvas:Canvas)
         {
@@ -206,6 +206,10 @@ package game
                         makePoints();
                         makeVoronoiGraph();
                         break;
+                    case "plates":
+                        // Fill tectonics from their origins
+                        Tectonics.calculate();
+                        break;
                     default:
                         break;
                 }
@@ -215,6 +219,7 @@ package game
 
             // Draw all layers
             Artist.draw();
+            Artist.drawUI();
 
             canvas.validateLayersOrderAndVisibility();
         }
